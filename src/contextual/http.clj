@@ -24,6 +24,34 @@
       (transient {})
       m))))
 
+
+(defn query-string
+  [m]
+  (apply
+   c/->str
+   (into
+    []
+    (map (fn [[k v]]
+           (c/->if
+            k
+            (c/->str
+             (c/->if
+              (c/->fn keyword? k)
+              (c/->fn name k)
+              k) \= v \&))))
+    m)))
+
+(comment
+  (def qs (query-string
+           {:a 1
+            nil 3
+            :b 2
+            :c (c/->path :c)}))
+  (time
+   (dotimes [_ 1e6]
+     (c/-invoke qs {:c 4}))))
+
+#_
 (defrecord Request
     [url path query-params body form method]
   c/IContext
