@@ -121,11 +121,11 @@
 (def-paths)
 
 (defn ->path
-  [f & args]
+  [& args]
   (let [n (count args)
         c (get @path-builders n)]
     (if c
-      (apply c f args)
+      (apply c args)
       (->Path args))))
 
 (defrecord Or [a b]
