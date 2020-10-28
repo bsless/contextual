@@ -8,6 +8,13 @@
 (defprotocol IStringBuild
   (-invoke-with-builder [this ctx sb]))
 
+(definline ^:private -default-invoke-with-builder
+  [this ctx ^StringBuilder sb]
+  `(let [ret# (-invoke ~this ~ctx)]
+    (if (nil? ret#)
+      nil
+      (.append ~(with-meta sb {:tag "StringBuilder"}) ret#))))
+
 (extend-protocol IContext
   Object
   (-invoke [this ctx] this)
@@ -16,9 +23,11 @@
 
 (extend-protocol IStringBuild
   Object
-  (-invoke-with-builder [this ctx sb] (.append ^StringBuilder sb (.toString this)))
+  (-invoke-with-builder [this ctx sb]
+    (-default-invoke-with-builder this ctx sb))
   String
-  (-invoke-with-builder [this ctx sb] (.append ^StringBuilder sb this))
+  (-invoke-with-builder [this ctx sb]
+    (.append ^StringBuilder sb this))
   nil
   (-invoke-with-builder [this ctx sb]))
 
@@ -186,15 +195,17 @@
                     rec (symbol (str name n))
                     constructor (symbol (str "->" rec))
                     parts (map (fn [a] `(let [~'a (~invoke ~a ~ctx)]
-                                         (if (nil? ~'a) nil (.append ~sb ~'a)))) args)
-                    body `(let [~sb (StringBuilder.)]
-                            ~@parts
-                            (.toString ~sb))]]
+                                         (if (nil? ~'a) nil (.append ~sb ~'a)))) args)]]
           `(do
              (defrecord ~rec [~@args]
+               IStringBuild
+               (-invoke-with-builder [~'this ~ctx ~'sb]
+                 ~@parts)
                IContext
                (~invoke [~'this ~ctx]
-                ~body))
+                (let [~sb (StringBuilder.)]
+                  (-invoke-with-builder ~'this ~ctx ~sb)
+                  (.toString ~sb))))
              (swap! str-builders assoc ~n ~constructor)))]
     `(do
        ~@defs)))
