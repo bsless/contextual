@@ -1,4 +1,6 @@
 (ns contextual.core
+  (:require
+   [clojure.walk :as walk])
   (:import
    (java.lang StringBuilder)))
 
@@ -228,3 +230,52 @@
   [delim & args]
   (let [args (interpose delim args)]
     (apply ->str args)))
+
+(defn assemble
+  ([expr]
+   (assemble expr {}))
+  ([expr lookup]
+   (walk/postwalk
+    (fn [expr]
+      (cond
+        (list? expr)
+        (let [[f & args] expr]
+          (case f
+            if (apply ->if args)
+            or (apply ->or args)
+            and (apply ->and args)
+            str (apply ->str args)
+            join (apply ->join args)
+            path (apply ->path args)
+            (apply ->fn (deref (resolve f)) args)))
+        (symbol? expr) (get lookup expr expr)
+        :else expr))
+    expr)))
+
+(comment
+
+  (def ctx {:x {:y false}
+            :a {:b 3}
+            :y {:z "foo"}
+            :u {:w "bar"}})
+
+  (def c
+    (assemble
+     '(if (path :x :y)
+        (+ (path :a :b) 2)
+        (str (path :y :z) "blah" (path :u :w)))))
+
+  (-invoke c ctx)
+
+  (def --p (->path :u :w))
+  (def lookup {'--p --p})
+
+  (def c (assemble
+          '(if (path :x :y)
+             (+ (path :a :b) 2)
+             (str (path :y :z) "blah" --p))
+          lookup))
+
+  (-invoke c ctx)
+
+  )
