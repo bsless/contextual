@@ -313,6 +313,14 @@
   [lookup sym]
   (if (symbol? sym) (get lookup sym sym) sym))
 
+(defn binding-symbol
+  [s]
+  (with-meta s {:binding true}))
+
+(defn binding-symbol?
+  [s]
+  (boolean (:binding (meta s))))
+
 (defn bindings->ssa
   [bindings]
   (let [bs (partition 2 bindings)]
@@ -325,7 +333,7 @@
               sym (gensym (str b "__"))
               e (walk/postwalk (partial symbol-lookup seen) e)
               seen (assoc seen b sym)
-              ssa (conj ssa sym e)
+              ssa (conj ssa (binding-symbol sym) e)
               trace (conj trace seen)]
           (recur bs seen ssa trace))
         {:bindings ssa :seen seen :trace trace}))))
