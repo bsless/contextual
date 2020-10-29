@@ -401,6 +401,13 @@
     (let [e (-invoke bindings ctx)]
       (-invoke expr (with-env ctx e)))))
 
+(defn ->let
+  [bindings expr]
+  (->Let
+   (->Bindings
+    (into [] (partition-all 2) bindings))
+   expr))
+
 (defn assemble
   ([expr]
    (assemble expr {}))
