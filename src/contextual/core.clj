@@ -299,9 +299,15 @@
   [ctx]
   (:env (meta ctx)))
 
+(defn env?
+  [e]
+  (instance? Env e))
+
 (defn with-env
-  [ctx env]
-  (with-meta ctx {:env env}))
+  [ctx e]
+  (let [e (cond (map? e) (env e)
+                (env? e) e)]
+    (with-meta ctx {:env e})))
 
 (defn- symbol-lookup
   [lookup sym]
