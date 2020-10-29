@@ -51,6 +51,30 @@
    (dotimes [_ 1e6]
      (c/-invoke qs {:c 4}))))
 
+(defn qs->ir
+  [m]
+  `(~'str
+    ~@(map
+       (fn [[k v]]
+         `(if ~k
+            (~'str (if (keyword? ~k)
+                   (name ~k)
+                   ~k)
+                 \=
+                 ~v
+                 \&)))
+       m)))
+
+(comment
+  (def ir (qs->ir
+           {:a 1
+            nil 3
+            :b 2
+            :c (c/->path :c)}))
+  (def c (c/assemble ir))
+  (c/-invoke c {:c 4})
+  )
+
 #_
 (defrecord Request
     [url path query-params body form method]
