@@ -231,6 +231,103 @@
   (let [args (interpose delim args)]
     (apply ->str args)))
 
+(defprotocol IEnv
+  (-lookup [this k] [this k nf])
+  (-with [this k v] [this k v kvs]))
+
+(declare ->Env)
+
+(extend-protocol IEnv
+  nil
+  (-lookup [this k] nil)
+  (-with
+    ([this k v]
+     (->Env {k v} this))
+    ([this k v kvs]
+     (->Env (into {k v} (partition-all 2) kvs) this))))
+
+(defrecord Env [curr prev]
+  IEnv
+  (-lookup [this k]
+    (when curr
+      (if-let [f (find curr k)]
+        (val f)
+        (-lookup prev k))))
+  (-lookup [this k nf]
+    (if curr
+      (if-let [f (find curr k)]
+        (val f)
+        (-lookup prev k))
+      nf))
+  (-with [this k v]
+    (->Env {k v} this))
+  (-with [this k v kvs]
+    (->Env (into {k v} (partition-all 2) kvs) this)))
+
+(defn with
+  ([e k v]
+   (-with e k v))
+  ([e k v & kvs]
+   (-with e k v kvs)))
+
+(defn lookup
+  ([e k]
+   (-lookup e k))
+  ([e k nf]
+   (-lookup e k nf)))
+
+(defn env
+  ([curr]
+   (->Env curr nil))
+  ([curr prev]
+   (->Env curr prev)))
+
+(comment
+  (lookup
+   (with nil 1 2 3 4 5 6)
+   1)
+  (lookup
+   (->
+    nil
+    (with 1 2)
+    (with 3 4))
+   3)
+  )
+
+(defn getenv
+  [ctx]
+  (:env (meta ctx)))
+
+(defn with-env
+  [ctx env]
+  (with-meta ctx {:env env}))
+
+(defn bindings->ssa
+  [bindings]
+  (let [bs (partition 2 bindings)]
+    (loop [bs bs
+           seen {}
+           ssa []]
+      (if (seq bs)
+        (let [[[b e] & bs] bs
+              sym (gensym (str b "__"))
+              e (walk/postwalk (fn [e] (if (symbol? e) (get seen e e) e)) e)
+              seen (assoc seen b sym)
+              ssa (conj ssa sym e)]
+          (recur bs seen ssa))
+        ssa))))
+
+(comment
+  (bindings->ssa '[a 1
+                   a (+ a 1)
+                   b 2
+                   c (+ a b)]))
+
+#_
+(defrecord Let [bindings expr]
+  (-invoke [this ctx]
+    (let [e ()])))
+
 (defn assemble
   ([expr]
    (assemble expr {}))
