@@ -238,7 +238,7 @@
    (walk/postwalk
     (fn [expr]
       (cond
-        (list? expr)
+        (seq? expr)
         (let [[f & args] expr]
           (case f
             if (apply ->if args)
