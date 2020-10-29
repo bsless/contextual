@@ -370,6 +370,13 @@
     (let [e (getenv ctx)]
       (lookup e sym))))
 
+(defn ->lookup
+  [sym]
+  (->Lookup sym))
+
+(comment
+  (->lookup 's))
+
 (defrecord Bindings [bindings]
   IContext
   (-invoke [this ctx]
