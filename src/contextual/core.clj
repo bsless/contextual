@@ -408,6 +408,28 @@
     (into [] (partition-all 2) bindings))
    expr))
 
+(def symbols-registry
+  {'if ->if
+   'or ->or
+   'and ->and
+   'str ->str
+   'join ->join
+   'path ->path
+   'let ->let})
+
+(defn maybe-resolve
+  [s]
+  (when-let [v (resolve s)]
+    (deref v)))
+
+(defn expand-symbol
+  [lookup s]
+  (or
+   (and (symbols-registry s) s)
+   (maybe-resolve s)
+   (and (binding-symbol? s) s)
+   (get lookup s (->lookup s))))
+
 (defn assemble
   ([expr]
    (assemble expr {}))
@@ -417,15 +439,10 @@
       (cond
         (seq? expr)
         (let [[f & args] expr]
-          (case f
-            if (apply ->if args)
-            or (apply ->or args)
-            and (apply ->and args)
-            str (apply ->str args)
-            join (apply ->join args)
-            path (apply ->path args)
-            (apply ->fn (deref (resolve f)) args)))
-        (symbol? expr) (get lookup expr expr)
+          (if-let [f (symbols-registry f)]
+            (apply f args)
+            (apply ->fn f args)))
+        (symbol? expr) (expand-symbol lookup expr)
         :else expr))
     expr)))
 
@@ -472,4 +489,12 @@
      '(if (path :x :y)
         (let [x (path :a :b)]
           (+ x 2))
-        (str (path :y :z) "blah" (path :u :w))))))
+        (str (path :y :z) "blah" (path :u :w)))))
+
+  (def ctx {:x {:y true}
+            :a {:b 3}
+            :y {:z "foo"}
+            :u {:w "bar"}})
+
+  (-invoke c ctx)
+  )
