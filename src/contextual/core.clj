@@ -249,10 +249,11 @@
 (defrecord Env [curr prev]
   IEnv
   (-lookup [this k]
-    (when curr
+    (if curr
       (if-let [f (find curr k)]
         (val f)
-        (-lookup prev k))))
+        (-lookup prev k))
+      (throw RuntimeException (str "Unable to resolve symbol: " k " in this context"))))
   (-lookup [this k nf]
     (if curr
       (if-let [f (find curr k)]
