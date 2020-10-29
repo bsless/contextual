@@ -302,20 +302,26 @@
   [ctx env]
   (with-meta ctx {:env env}))
 
+(defn- symbol-lookup
+  [lookup sym]
+  (if (symbol? sym) (get lookup sym sym) sym))
+
 (defn bindings->ssa
   [bindings]
   (let [bs (partition 2 bindings)]
     (loop [bs bs
            seen {}
-           ssa []]
+           ssa []
+           trace []]
       (if (seq bs)
         (let [[[b e] & bs] bs
               sym (gensym (str b "__"))
-              e (walk/postwalk (fn [e] (if (symbol? e) (get seen e e) e)) e)
+              e (walk/postwalk (partial symbol-lookup seen) e)
               seen (assoc seen b sym)
-              ssa (conj ssa sym e)]
-          (recur bs seen ssa))
-        ssa))))
+              ssa (conj ssa sym e)
+              trace (conj trace seen)]
+          (recur bs seen ssa trace))
+        {:bindings ssa :seen seen :trace trace}))))
 
 (comment
   (bindings->ssa '[a 1
