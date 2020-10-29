@@ -381,8 +381,9 @@
      bindings)))
 
 (defrecord Let [bindings expr]
+  IContext
   (-invoke [this ctx]
-    (let [e (-invoke binding ctx)]
+    (let [e (-invoke bindings ctx)]
       (-invoke expr (with-env ctx e)))))
 
 (defn assemble
