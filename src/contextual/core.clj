@@ -330,10 +330,54 @@
                    b 2
                    c (+ a b)]))
 
-#_
+(defn let->ssa
+  [[_let bs & body]]
+  (let [{:keys [bindings seen]} (bindings->ssa bs)
+        body (walk/postwalk (partial symbol-lookup seen) body)]
+    (concat (list 'let bindings) body)))
+
+(comment
+  (let->ssa
+   '(let [a 1
+          a (+ a 1)
+          b 2
+          c (+ a b)]
+      (println a b)
+      (* c b))))
+
+(defn ssa-bindings
+  [expr]
+  (walk/postwalk
+   (fn [expr]
+     (cond
+       (seq? expr)
+       (let [[f] expr]
+         (case f
+           let (let->ssa expr)
+           expr))
+       :else expr))
+   expr))
+
+(defrecord Lookup [sym]
+  IContext
+  (-invoke [this ctx]
+    (let [e (getenv ctx)]
+      (lookup e sym))))
+
+(defrecord Bindings [bindings]
+  IContext
+  (-invoke [this ctx]
+    (reduce
+     (fn [e [s expr]]
+       (let [v (-invoke expr (with-env ctx e))]
+         (assoc e s v)))
+     {}
+     bindings)))
+
 (defrecord Let [bindings expr]
   (-invoke [this ctx]
-    (let [e ()])))
+    (let [e (-invoke binding ctx)]
+      (-invoke expr (with-env ctx e)))))
 
 (defn assemble
   ([expr]
@@ -383,3 +427,20 @@
   (-invoke c ctx)
 
   )
+
+(defn -compile
+  ([expr]
+   (-compile expr {}))
+  ([expr lookup]
+   (->
+    expr
+    ssa-bindings
+    (assemble lookup))))
+
+(comment
+  (def c
+    (-compile
+     '(if (path :x :y)
+        (let [x (path :a :b)]
+          (+ x 2))
+        (str (path :y :z) "blah" (path :u :w))))))
