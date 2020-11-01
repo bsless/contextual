@@ -82,6 +82,10 @@ Given an expression such as
 
 Compilation will produce a tree of records representing its structure after a post-walk.
 
+```clojure
+#contextual.core.If{:p #contextual.core.Path2{:k0 :x, :k1 :y}, :t #contextual.core.Let{:bindings #contextual.core.Bindings{:bindings [[x__22910 #contextual.core.Path2{:k0 :a, :k1 :b}]]}, :expr #contextual.core.Fn2{:f #function[clojure.core/+], :a0 #contextual.core.Lookup{:sym x__22910}, :a1 2}}, :e #contextual.core.Str3{:a0 #contextual.core.Path2{:k0 :y, :k1 :z}, :a1 "blah", :a2 #contextual.core.Path2{:k0 :u, :k1 :w}}}
+```
+
 #### Symbol resolution
 
 Currently, symbols are resolved via:
