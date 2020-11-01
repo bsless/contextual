@@ -33,6 +33,16 @@
   nil
   (-invoke-with-builder [this ctx sb]))
 
+(defrecord Map [m]
+  IContext
+  (-invoke [this ctx]
+    (persistent!
+     (reduce-kv
+      (fn [m k v]
+        (assoc! m (-invoke k ctx) (-invoke v ctx)))
+      (transient {})
+      m))))
+
 (defrecord If [p t e]
   IContext
   (-invoke [this ctx]
