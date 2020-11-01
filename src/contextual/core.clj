@@ -4,6 +4,10 @@
   (:import
    (java.lang StringBuilder)))
 
+(comment
+  (use 'clojure.tools.trace)
+  (trace-ns contextual.core))
+
 (defprotocol IContext
   (-invoke [this ctx]))
 
