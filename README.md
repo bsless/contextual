@@ -96,6 +96,20 @@ Currently, symbols are resolved via:
 
 Otherwise, a symbol will be interpreted as an environment lookup.
 
+## Status
+
+Experimental, in development
+
+## TODO
+
+- Unit tests
+- Map* and Tuple records
+- Ensure strings work (as advertised)
+- Generalize `StringBuilder` case to `Appendable`
+- Check option of similarly implementing `OutputStream`. Use `Writer`?
+- Bring HTTP request builder up to workable condition.
+- POC tagged template.
+
 ## License
 
 Copyright © 2020 Ben Sless
