@@ -1,5 +1,8 @@
 # Contextual
 
+A two-phase Clojure interpreter. Write an expression once, run it many
+times with good performance.
+
 Deferred evaluation of Clojure expressions with late bindings of input.
 
 ## Not A Function
@@ -23,6 +26,11 @@ This library allows the user to store and treat expressions as data, and
 safely evaluate them in different contexts. Moreover, these expressions
 can be safely generated based on user input and run inside your
 application with reasonable performance.
+
+## Two Phase Interpreter
+
+- Compile: An expression is compiled to a class hierarchy representing its tree structure
+- Invoke: Evaluate the expression with given context. Only method calls, zero interpretations.
 
 ## Usage
 
