@@ -24,7 +24,6 @@
       (transient {})
       m))))
 
-
 (defn query-string
   [m]
   (apply
@@ -107,22 +106,21 @@
   (c/-invoke c {:c 4})
   )
 
-#_
-(defrecord Request
-    [url path query-params body form method]
-  c/IContext
-  (-invoke [this ctx]
-    (let [url (c/-invoke url ctx)
-          path (c/-invoke path ctx)
-          query-params (c/-invoke query-params ctx)
-          body (c/-invoke body ctx)
-          form (c/-invoke form ctx)
-          method (c/invoke method ctx)])
-    (cond->
-        {:url url}
-      )))
+(declare body->ir path->ir)
 
-(comment
-  '(->request
-    {:url (->url (->str ,,,))
-     }))
+(defn request
+  ([{:keys [url path query-params body form method headers]}
+    {:keys [serialize-query-params
+            serialize-body
+            serialize-form]}]
+   (let [url (cond->
+                 url
+               path (path->ir path)
+               serialize-query-params `(~'str  ~(qs->ir query-params)))]
+     (cond->
+         {:method method
+          :url url}
+       headers (assoc :headers (c/->map headers))
+       (not serialize-query-params) (assoc :query-params (c/->map query-params))
+       body (assoc :body (if serialize-body (body->ir body) (c/->map body)))
+       form (assoc :form (if serialize-form (body->ir form) (c/->map form)))))))
