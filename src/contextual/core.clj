@@ -2,7 +2,10 @@
   (:require
    [clojure.walk :as walk])
   (:import
+   (java.util Map HashMap)
    (java.lang StringBuilder)))
+
+(set! *warn-on-reflection* true)
 
 (comment
   (use 'clojure.tools.trace)
@@ -247,9 +250,70 @@
   (let [args (interpose delim args)]
     (apply ->str args)))
 
+(def sentinel (Object.))
+(defn sentinel? [x] (identical? sentinel x))
+(def ^:dynamic *env-type* :persistent)
+
 (defprotocol IEnv
   (-lookup [this k] [this k nf])
   (-with [this k v] [this k v kvs]))
+
+(defrecord LocalPersistentEnv [m]
+  IEnv
+  (-lookup [this k]
+    (if-let [f (find m k)]
+      (val f)
+      sentinel))
+  (-lookup [this k nf]
+    (if-let [f (find m k)]
+      (val f)
+      nf))
+  (-with [this k v]
+    (assoc this k v))
+  (-with [this k v kvs]
+    (into (assoc this k v) (partition-all 2) kvs)))
+
+(defrecord LocalMutableEnv [^Map m]
+  IEnv
+  (-lookup [this k]
+    (.getOrDefault m k sentinel))
+  (-lookup [this k nf]
+    (.getOrDefault m k nf))
+  (-with [this k v]
+    (.put m k v)
+    this)
+  (-with [this k v kvs]
+    (.put this k v)
+    (doseq [[k v] (partition 2 kvs)]
+      (.put m k v))
+    this))
+
+(defn ->local-persistent-env
+  [m]
+  (->LocalPersistentEnv m))
+
+(defn ->local-env
+  [m]
+  (->LocalMutableEnv m))
+
+(defn new-local-persistent-env
+  ([]
+   (->local-persistent-env {}))
+  ([k v]
+   (->local-persistent-env {k v}))
+  ([k v kvs]
+   (->local-persistent-env (into {k v} (partition-all 2) kvs))))
+
+(defn new-local-env
+  ([]
+   (->local-env (HashMap.)))
+  ([k v]
+   (->local-env (doto ^Map (HashMap.) (.put k v))))
+  ([k v kvs]
+   (let [^Map m (doto ^Map (HashMap.) (.put k v))]
+     (doseq [[k v] (partition 2 kvs)]
+       (.put m k v))
+     (->local-env m))))
 
 (declare ->Env)
 
@@ -258,28 +322,31 @@
   (-lookup [this k] nil)
   (-with
     ([this k v]
-     (->Env {k v} this))
+     (->Env (new-local-env k v) this))
     ([this k v kvs]
-     (->Env (into {k v} (partition-all 2) kvs) this))))
+     (->Env (new-local-env k v kvs) this))))
+
+(defn -env-lookup
+  [curr prev k]
+  (let [f (-lookup curr k sentinel)]
+    (if (sentinel? f)
+      (-lookup prev k)
+      f)))
 
 (defrecord Env [curr prev]
   IEnv
   (-lookup [this k]
     (if curr
-      (if-let [f (find curr k)]
-        (val f)
-        (-lookup prev k))
+      (-env-lookup curr prev k)
       (throw (new RuntimeException (str "Unable to resolve symbol: " k " in this context")))))
   (-lookup [this k nf]
     (if curr
-      (if-let [f (find curr k)]
-        (val f)
-        (-lookup prev k))
+      (-env-lookup curr prev k)
       nf))
   (-with [this k v]
-    (->Env {k v} this))
+    (->Env (new-local-env k v) this))
   (-with [this k v kvs]
-    (->Env (into {k v} (partition-all 2) kvs) this)))
+    (->Env (new-local-env k v kvs) this)))
 
 (defn with
   ([e k v]
@@ -427,8 +494,8 @@
                     constructor (symbol (str "->" rec))
                     bindings (reduce
                               (fn [bs [s e]]
-                                (conj bs env `(assoc ~env ~s (~invoke ~e (with-env ~ctx ~env)))))
-                              `[~env {}]
+                                (conj bs env `(-with ~env ~s (~invoke ~e (with-env ~ctx ~env)))))
+                              `[~env (new-local-env)]
                               (map vector syms exprs))
                     body `(let [~@bindings] ~env)]]
           `(do
