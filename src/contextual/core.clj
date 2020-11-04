@@ -37,7 +37,7 @@
   nil
   (-invoke-with-builder [this ctx sb]))
 
-(defrecord Map [m]
+(defrecord MapWrapper [m]
   IContext
   (-invoke [this ctx]
     (persistent!
@@ -46,6 +46,8 @@
         (assoc! m (-invoke k ctx) (-invoke v ctx)))
       (transient {})
       m))))
+
+(defn ->map [m] (->MapWrapper m))
 
 (defrecord If [p t e]
   IContext
