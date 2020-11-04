@@ -321,7 +321,8 @@
 
 (defn with-env
   [ctx e]
-  (let [e (cond (map? e) (env e)
+  (let [prev (getenv ctx)
+        e (cond (map? e) (env e prev)
                 (env? e) e)]
     (with-meta ctx {:env e})))
 
