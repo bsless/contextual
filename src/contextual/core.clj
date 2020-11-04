@@ -2,6 +2,7 @@
   (:require
    [clojure.walk :as walk])
   (:import
+   (clojure.lang IPersistentMap)
    (java.util Map HashMap)
    (java.lang StringBuilder)))
 
@@ -258,6 +259,8 @@
   (-lookup [this k] [this k nf])
   (-with [this k v] [this k v kvs]))
 
+(declare ->LocalPersistentEnv)
+
 (defrecord LocalPersistentEnv [m]
   IEnv
   (-lookup [this k]
@@ -269,9 +272,9 @@
       (val f)
       nf))
   (-with [this k v]
-    (assoc this k v))
+    (->LocalPersistentEnv (assoc m k v)))
   (-with [this k v kvs]
-    (into (assoc this k v) (partition-all 2) kvs)))
+    (->LocalPersistentEnv (into (assoc m k v) (partition-all 2) kvs))))
 
 (defrecord LocalMutableEnv [^Map m]
   IEnv
@@ -283,7 +286,7 @@
     (.put m k v)
     this)
   (-with [this k v kvs]
-    (.put this k v)
+    (.put m k v)
     (doseq [[k v] (partition 2 kvs)]
       (.put m k v))
     this))
@@ -304,7 +307,7 @@
   ([k v kvs]
    (->local-persistent-env (into {k v} (partition-all 2) kvs))))
 
-(defn new-local-env
+(defn new-local-mutable-env
   ([]
    (->local-env (HashMap.)))
   ([k v]
@@ -315,6 +318,8 @@
        (.put m k v))
      (->local-env m))))
 
+(def ^:dynamic *new-local-env* new-local-persistent-env)
+
 (declare ->Env)
 
 (extend-protocol IEnv
@@ -322,16 +327,16 @@
   (-lookup [this k] nil)
   (-with
     ([this k v]
-     (->Env (new-local-env k v) this))
+     (->Env (*new-local-env* k v) this))
     ([this k v kvs]
-     (->Env (new-local-env k v kvs) this))))
+     (->Env (*new-local-env* k v kvs) this))))
 
-(defn -env-lookup
+(definline -env-lookup
   [curr prev k]
-  (let [f (-lookup curr k sentinel)]
-    (if (sentinel? f)
-      (-lookup prev k)
-      f)))
+  `(let [f# (-lookup ~curr ~k ~'sentinel)]
+     (if (sentinel? f#)
+       (-lookup ~prev ~k)
+       f#)))
 
 (defrecord Env [curr prev]
   IEnv
@@ -344,9 +349,9 @@
       (-env-lookup curr prev k)
       nf))
   (-with [this k v]
-    (->Env (new-local-env k v) this))
+    (->Env (*new-local-env* k v) this))
   (-with [this k v kvs]
-    (->Env (new-local-env k v kvs) this)))
+    (->Env (*new-local-env* k v kvs) this)))
 
 (defn with
   ([e k v]
@@ -378,9 +383,23 @@
    3)
   )
 
+(defn -meta
+  {:inline
+   (fn [x]
+     `(if (instance? clojure.lang.IMeta ~x)
+        (.meta ~(with-meta x {:tag "clojure.lang.IMeta"}))
+        nil))}
+  [x]
+  (if (instance? clojure.lang.IMeta x)
+    (. ^clojure.lang.IMeta x (meta))
+    nil))
+
 (defn getenv
   [ctx]
-  (:env (meta ctx)))
+  (let [m (-meta ctx)]
+    (if (nil? m)
+      nil
+      (.valAt ^IPersistentMap  m :env))))
 
 (defn env?
   [e]
@@ -486,6 +505,7 @@
         name "Bindings"
         ctx 'ctx
         env 'e
+        factory 'new-local-env
         defs
         (for [n (range 1 13)
               :let [syms (map (comp symbol #(str "sym" %)) (range n))
@@ -495,11 +515,11 @@
                     bindings (reduce
                               (fn [bs [s e]]
                                 (conj bs env `(-with ~env ~s (~invoke ~e (with-env ~ctx ~env)))))
-                              `[~env (new-local-env)]
+                              `[~env (~factory)]
                               (map vector syms exprs))
                     body `(let [~@bindings] ~env)]]
           `(do
-             (defrecord ~rec [~@(interleave syms exprs)]
+             (defrecord ~rec [~factory ~@(interleave syms exprs)]
                IContext
                (~invoke [~'this ~ctx]
                 ~body))
@@ -514,7 +534,7 @@
   (let [n (/ (count args) 2)
         c (get @binding-builders n)]
     (if c
-      (apply c args)
+      (apply c *new-local-env* args)
       (->Bindings (into [] (partition-all 2) args)))))
 
 (defrecord Let [bindings expr]
