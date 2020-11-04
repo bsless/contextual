@@ -104,6 +104,42 @@ Currently, symbols are resolved via:
 
 Otherwise, a symbol will be interpreted as an environment lookup.
 
+## Performance vs. SCI
+
+```clojure
+(require '[sci.core :as sci])
+
+(def scitx (sci/init {}))
+
+(sci/eval-form scitx '(let [x 1 y 2] (+ x y)))
+
+(def c (-compile '(let [x 1 y 2] (+ x y))))
+
+(-invoke c {})
+
+(require '[criterium.core :as cc])
+
+(cc/quick-bench
+ (sci/eval-form scitx '(let [x 1 y 2] (+ x y))))
+
+;;; Evaluation count : 20016 in 6 samples of 3336 calls.
+;;;              Execution time mean : 31.412883 µs
+;;;     Execution time std-deviation : 1.088819 µs
+;;;    Execution time lower quantile : 30.478367 µs ( 2.5%)
+;;;    Execution time upper quantile : 33.040048 µs (97.5%)
+;;;                    Overhead used : 9.329803 ns
+
+(cc/quick-bench
+ (-invoke c {}))
+
+;;; Evaluation count : 484794 in 6 samples of 80799 calls.
+;;;              Execution time mean : 1.291106 µs
+;;;     Execution time std-deviation : 31.785943 ns
+;;;    Execution time lower quantile : 1.258798 µs ( 2.5%)
+;;;    Execution time upper quantile : 1.332300 µs (97.5%)
+;;;                    Overhead used : 9.329803 ns
+```
+
 ## Status
 
 Experimental, in development
