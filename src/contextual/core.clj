@@ -409,6 +409,44 @@
      {}
      bindings)))
 
+(defonce ^:private binding-builders (atom {}))
+
+(defmacro ^:private def-bindings []
+  (let [invoke '-invoke
+        name "Bindings"
+        ctx 'ctx
+        env 'e
+        defs
+        (for [n (range 1 13)
+              :let [syms (map (comp symbol #(str "sym" %)) (range n))
+                    exprs (map (comp symbol #(str "expr" %)) (range n))
+                    rec (symbol (str name n))
+                    constructor (symbol (str "->" rec))
+                    bindings (reduce
+                              (fn [bs [s e]]
+                                (conj bs env `(assoc ~env ~s (~invoke ~e (with-env ~ctx ~env)))))
+                              `[~env {}]
+                              (map vector syms exprs))
+                    body `(let [~@bindings] ~env)]]
+          `(do
+             (defrecord ~rec [~@(interleave syms exprs)]
+               IContext
+               (~invoke [~'this ~ctx]
+                ~body))
+             (swap! binding-builders assoc ~n ~constructor)))]
+    `(do
+       ~@defs)))
+
+(def-bindings)
+
+(defn ->bindings
+  [args]
+  (let [n (/ (count args) 2)
+        c (get @binding-builders n)]
+    (if c
+      (apply c args)
+      (->Bindings (into [] (partition-all 2) args)))))
+
 (defrecord Let [bindings expr]
   IContext
   (-invoke [this ctx]
@@ -417,10 +455,7 @@
 
 (defn ->let
   [bindings expr]
-  (->Let
-   (->Bindings
-    (into [] (partition-all 2) bindings))
-   expr))
+  (->Let (->bindings bindings) expr))
 
 (def symbols-registry
   {'if ->if

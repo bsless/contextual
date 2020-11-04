@@ -132,12 +132,12 @@ Otherwise, a symbol will be interpreted as an environment lookup.
 (cc/quick-bench
  (-invoke c {}))
 
-;;; Evaluation count : 484794 in 6 samples of 80799 calls.
-;;;              Execution time mean : 1.291106 µs
-;;;     Execution time std-deviation : 31.785943 ns
-;;;    Execution time lower quantile : 1.258798 µs ( 2.5%)
-;;;    Execution time upper quantile : 1.332300 µs (97.5%)
-;;;                    Overhead used : 9.329803 ns
+;;; Evaluation count : 543534 in 6 samples of 90589 calls.
+;;;              Execution time mean : 1.118617 µs
+;;;     Execution time std-deviation : 37.443201 ns
+;;;    Execution time lower quantile : 1.088897 µs ( 2.5%)
+;;;    Execution time upper quantile : 1.179156 µs (97.5%)
+;;;                    Overhead used : 9.414056 ns
 ```
 
 ## Status
