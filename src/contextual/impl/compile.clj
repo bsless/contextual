@@ -4,7 +4,7 @@
    [contextual.impl.control :as control :refer [->if ->or ->and]]
    [contextual.impl.path :as path :refer [->path]]
    [contextual.impl.let :as l :refer [->let]]
-   [contextual.impl.string :as s :refer [->str ->join]]
+   [contextual.impl.accumulator :as s :refer [->str ->join]]
    [contextual.impl.invoke :as i]
    [contextual.impl.protocols :as p]))
 

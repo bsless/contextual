@@ -1,8 +1,8 @@
-(ns contextual.impl.string-test
+(ns contextual.impl.accumulator-test
   (:require
    [contextual.impl.protocols :as p]
    [contextual.impl.path :refer [->path]]
-   [contextual.impl.string :as sut]
+   [contextual.impl.accumulator :as sut]
    [clojure.test :as t]))
 
 (t/deftest string

@@ -1,4 +1,4 @@
-(ns contextual.impl.string
+(ns contextual.impl.accumulator
   (:require
    [contextual.impl.protocols :as p]))
 
