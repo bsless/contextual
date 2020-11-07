@@ -2,72 +2,75 @@
   (:require
    [contextual.impl.protocols :as p]))
 
-(defn- string-builder-rf
-  "Reducing function to start [[transduce]] with, result is string."
-  ([] (StringBuilder.))
-  ([^StringBuilder ret] (.toString ret))
-  ([^StringBuilder acc in]
-   (.append acc in)))
-
-(defrecord Str [args]
+(defrecord Accumulator [factory finish args]
   p/IContext
   (-invoke [this ctx]
-    (transduce
-     (comp
-      (map #(p/-invoke % ctx))
-      (remove nil?))
-     string-builder-rf
-     args))
-  p/IStringBuild
-  (-invoke-with-builder [this ctx sb]
+    (let [app (factory)]
+      (p/-invoke-with-appendable this ctx app)
+      (finish app)))
+  p/IAppend
+  (-invoke-with-appendable [this ctx a]
     (doseq [arg args]
-      (p/-invoke-with-builder arg ctx sb))
-    (.toString ^StringBuilder sb)))
+      (p/-invoke-with-appendable arg ctx a))))
+
+(defn- new-string-builder
+  []
+  (StringBuilder.))
+
+(defn finalize-string-builder
+  [^StringBuilder sb]
+  (.toString sb))
 
 (defn ->str!
   [args]
-  (->Str args))
+  (->Accumulator new-string-builder finalize-string-builder args))
 
 (defn ->join!
   [delim args]
-  (->Str (interpose delim args)))
+  (->str! (interpose delim args)))
 
-(defonce ^:private str-builders (atom {}))
+(comment
+  (p/-invoke
+   (->str! [1 2 3])
+   {}))
 
-(defmacro ^:private def-str []
+(defonce ^:private accum-builders (atom {}))
+
+(defmacro ^:private def-accum []
   (let [ctx 'ctx
         name "Str"
-        sb (with-meta 'sb {:tag "StringBuilder"})
+        appendable (with-meta 'appendable {:tag "Appendable"})
         defs
         (for [n (range 1 23)
               :let [args (map (comp symbol #(str "a" %)) (range n))
                     rec (symbol (str name n))
                     constructor (symbol (str "->" rec))
-                    parts (map (fn [a] `(let [~'a (p/-invoke ~a ~ctx)]
-                                         (if (nil? ~'a) nil (.append ~sb ~'a)))) args)]]
+                    parts (map (fn [arg]
+                                 `(p/-default-invoke-with-appendable ~arg ~ctx ~appendable))
+                               args)]]
           `(do
-             (defrecord ~rec [~@args]
-               p/IStringBuild
-               (-invoke-with-builder [~'this ~ctx ~'sb]
+             (defrecord ~rec [~'factory ~'finish ~@args]
+               p/IAppend
+               (-invoke-with-appendable [~'this ~ctx ~'appendable]
                  ~@parts)
                p/IContext
                (-invoke [~'this ~ctx]
-                (let [~sb (StringBuilder.)]
-                  (p/-invoke-with-builder ~'this ~ctx ~sb)
-                  (.toString ~sb))))
-             (swap! str-builders assoc ~n ~constructor)))]
+                (let [~appendable (~'factory)]
+                  (p/-invoke-with-appendable ~'this ~ctx ~appendable)
+                  (~'finish ~appendable))))
+             (swap! accum-builders assoc ~n ~constructor)))]
     `(do
        ~@defs)))
 
-(def-str)
+(def-accum)
 
 (defn ->str
   [& args]
   (let [n (count args)
-        c (get @str-builders n)]
+        c (get @accum-builders n)]
     (if c
-      (apply c args)
-      (->Str args))))
+      (apply c new-string-builder finalize-string-builder args)
+      (->Accumulator new-string-builder finalize-string-builder args))))
 
 (comment
   (p/-invoke (->str 1 2 3) nil))

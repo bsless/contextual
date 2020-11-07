@@ -1,12 +1,15 @@
 (ns contextual.impl.protocols
   (:import
-   (java.lang StringBuilder Appendable)))
+   (java.lang Appendable)))
+
+(comment
+  (instance? Appendable (StringBuilder.)))
 
 (defprotocol IContext
   (-invoke [this ctx]))
 
-(defprotocol IStringBuild
-  (-invoke-with-builder [this ctx sb]))
+(defprotocol IAppend
+  (-invoke-with-appendable [this ctx a]))
 
 (defprotocol IEnv
   (-lookup [this k] [this k nf])
@@ -18,21 +21,21 @@
   nil
   (-invoke [this ctx] nil))
 
-(definline ^:private -default-invoke-with-builder
-  [this ctx ^StringBuilder sb]
+(definline -default-invoke-with-appendable
+  [this ctx ^Appendable a]
   `(let [ret# (-invoke ~this ~ctx)]
      (if (nil? ret#)
        nil
        (.append
-        ~(with-meta sb {:tag "StringBuilder"})
+        ~(with-meta a {:tag "Appendable"})
         ret#))))
 
-(extend-protocol IStringBuild
+(extend-protocol IAppend
   Object
-  (-invoke-with-builder [this ctx sb]
-    (-default-invoke-with-builder this ctx sb))
+  (-invoke-with-appendable [this ctx a]
+    (-default-invoke-with-appendable this ctx a))
   String
-  (-invoke-with-builder [this ctx sb]
-    (.append ^StringBuilder sb this))
+  (-invoke-with-appendable [this ctx a]
+    (.append ^Appendable a this))
   nil
-  (-invoke-with-builder [this ctx sb]))
+  (-invoke-with-appendable [this ctx a]))

@@ -8,11 +8,11 @@
     (if (p/-invoke p ctx)
       (p/-invoke t ctx)
       (p/-invoke e ctx)))
-  p/IStringBuild
-  (-invoke-with-builder [this ctx sb]
+  p/IAppend
+  (-invoke-with-appendable [this ctx a]
     (if (p/-invoke p ctx)
-      (p/-invoke-with-builder t ctx sb)
-      (p/-invoke-with-builder e ctx sb))))
+      (p/-invoke-with-appendable t ctx a)
+      (p/-invoke-with-appendable e ctx a))))
 
 (defn ->if
   ([p t]
