@@ -2,6 +2,7 @@
   (:require
    [contextual.impl.compile :as sut]
    [contextual.impl.let :as l]
+   [contextual.impl.box :as b :refer [->box]]
    [contextual.impl.path :refer [->path]]
    [contextual.impl.invoke :refer [->fn]]
    [contextual.impl.protocols :as p]
@@ -59,7 +60,7 @@
   (t/testing ""
     (t/is (= (->path :a) (sut/-compile '(path :a))))
     (t/is (= (->path :a :b) (sut/-compile '(path :a :b))))
-    (t/is (= (->fn + 1 (->path :a :b)) (sut/-compile '(+ 1 (path :a :b)))))))
+    (t/is (= (->fn + (->box 1) (->path :a :b)) (sut/-compile '(+ 1 (path :a :b)))))))
 
 (t/deftest string)
 

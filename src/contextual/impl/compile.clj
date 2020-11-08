@@ -6,6 +6,7 @@
    [contextual.impl.let :as l :refer [->let]]
    [contextual.impl.string :as s :refer [->str ->join]]
    [contextual.impl.invoke :as i]
+   [contextual.impl.box :as b]
    [contextual.impl.protocols :as p]))
 
 (def symbols-registry
@@ -42,10 +43,19 @@
         (cond
           (seq? expr)
           (let [[f & args] expr]
-            (if-let [f (registry f)]
-              (apply f args)
+            (if-let [f' (registry f)]
+              (case f
+                path (apply f' (map b/unbox args))
+                (apply f' args))
               (apply i/->fn f args)))
           (symbol? expr) (expand-symbol registry lookup expr)
+          (or
+           (number? expr)
+           (char? expr)
+           (string? expr)
+           (keyword? expr)
+           (nil? expr)
+           ) (b/->box expr)
           :else expr))
       expr))))
 
