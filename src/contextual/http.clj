@@ -100,7 +100,8 @@
    'query-params ->query-params})
 
 (defn request
-  ([{:keys [url path query-params body form method headers]}
+  ([{:keys [url path query-params body form method headers]
+     :or {method "GET"}}
     {:keys [serialize-query-params
             serialize-body
             serialize-form]}]
