@@ -115,8 +115,8 @@
             :url url}
          headers (assoc :headers (->map headers))
          (and query-params (not serialize-query-params)) (assoc :query-params `(~'query-params ~query-params))
-         body (assoc :body (if serialize-body (body->ir body) `(~'-map ~body)))
-         form (assoc :form (if serialize-form (body->ir form) `(~'-map ~form))))))))
+         body (assoc :body (if serialize-body (list 'body-serializer (body->ir body)) `(~'-map ~body)))
+         form (assoc :form (if serialize-form (list 'form-serializer (body->ir form)) `(~'-map ~form))))))))
 
 (comment
   (p/-invoke
