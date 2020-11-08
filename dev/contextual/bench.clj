@@ -188,16 +188,17 @@
 
 ;;; Benchmarking expr: (str 1 (str 2 (str 3)))
 ;;; Contextual
-;;; Evaluation count : 127902900 in 60 samples of 2131715 calls.
-;;;              Execution time mean : 467.069346 ns
-;;;     Execution time std-deviation : 9.748048 ns
-;;;    Execution time lower quantile : 453.234661 ns ( 2.5%)
-;;;    Execution time upper quantile : 488.957407 ns (97.5%)
-;;;                    Overhead used : 9.326739 ns
+;;; Evaluation count : 169747740 in 60 samples of 2829129 calls.
+;;;              Execution time mean : 349.722194 ns
+;;;     Execution time std-deviation : 9.598949 ns
+;;;    Execution time lower quantile : 337.339724 ns ( 2.5%)
+;;;    Execution time upper quantile : 372.894581 ns (97.5%)
+;;;                    Overhead used : 10.483507 ns
 ;;;
-;;; Found 3 outliers in 60 samples (5.0000 %)
+;;; Found 4 outliers in 60 samples (6.6667 %)
 ;;; 	low-severe	 3 (5.0000 %)
-;;;  Variance from outliers : 9.4021 % Variance is slightly inflated by outliers
+;;; 	low-mild	 1 (1.6667 %)
+;;;  Variance from outliers : 14.2222 % Variance is moderately inflated by outliers
 ;;; SCI
 ;;; Evaluation count : 2688660 in 60 samples of 44811 calls.
 ;;;              Execution time mean : 22.616603 µs

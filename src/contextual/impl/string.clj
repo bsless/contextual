@@ -2,22 +2,14 @@
   (:require
    [contextual.impl.protocols :as p]))
 
-(defn- string-builder-rf
-  "Reducing function to start [[transduce]] with, result is string."
-  ([] (StringBuilder.))
-  ([^StringBuilder ret] (.toString ret))
-  ([^StringBuilder acc in]
-   (.append acc in)))
+(set! *warn-on-reflection* true)
 
 (defrecord Str [args]
   p/IContext
   (-invoke [this ctx]
-    (transduce
-     (comp
-      (map #(p/-invoke % ctx))
-      (remove nil?))
-     string-builder-rf
-     args))
+    (let [^StringBuilder sb (StringBuilder.)]
+      (p/-invoke-with-builder this ctx sb)
+      (.toString sb)))
   p/IStringBuild
   (-invoke-with-builder [this ctx sb]
     (doseq [arg args]
@@ -43,8 +35,7 @@
               :let [args (map (comp symbol #(str "a" %)) (range n))
                     rec (symbol (str name n))
                     constructor (symbol (str "->" rec))
-                    parts (map (fn [a] `(let [~'a (p/-invoke ~a ~ctx)]
-                                         (if (nil? ~'a) nil (.append ~sb ~'a)))) args)]]
+                    parts (map (fn [a] `(p/-invoke-with-builder ~a ~ctx ~sb)) args)]]
           `(do
              (defrecord ~rec [~@args]
                p/IStringBuild
