@@ -146,7 +146,7 @@ Experimental, in development
 
 ## TODO
 
-- [ ] Unit tests
+- [X] Unit tests
 - [ ] Map* and Tuple records
 - [ ] Ensure strings work (as advertised)
 - [ ] Generalize `StringBuilder` case to `Appendable`
