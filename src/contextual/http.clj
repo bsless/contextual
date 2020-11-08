@@ -15,7 +15,7 @@
   [s]
   (URLEncoder/encode (str s) "utf8"))
 
-(def ^:const path-sep \/)
+(def ^:const path-sep "/")
 
 (defn query-string
   [m]
@@ -30,7 +30,7 @@
              (->if
               (->fn keyword? k)
               (->fn name k)
-              k) \= v \&))))
+              k) "=" v "&"))))
     m)))
 
 (comment
@@ -64,7 +64,7 @@
   (when k
     (cond
       (and (scalar? k) (scalar? v)) (str (emit-scalar k) "=" (emit-scalar v) "&")
-      (scalar? k) (list 'str (emit-scalar k) \= v \&)
+      (scalar? k) (list 'str (emit-scalar k) "=" v "&")
       (some? k) `(~'kv ~k ~v))))
 
 (def compress-string-xf
@@ -140,8 +140,8 @@
             serialize-form]}]
    (let [url (cond->
                  url
-               path (as-> $ `(~'str ~$ \/ ~(path->ir path)))
-               serialize-query-params (as-> $ `(~'str ~$ \? ~(qs->ir query-params))))]
+               path (as-> $ `(~'str ~$ "/" ~(path->ir path)))
+               serialize-query-params (as-> $ `(~'str ~$ "?" ~(qs->ir query-params))))]
      `(~'-map
        ~(cond->
            {:method method
