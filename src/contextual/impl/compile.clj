@@ -23,9 +23,9 @@
     (deref v)))
 
 (defn expand-symbol
-  [lookup s]
+  [registry lookup s]
   (or
-   (and (symbols-registry s) s)
+   (and (registry s) s)
    (maybe-resolve s)
    (and (l/binding-symbol? s) s)
    (get lookup s (l/->lookup s))))
@@ -34,17 +34,20 @@
   ([expr]
    (assemble expr {}))
   ([expr lookup]
-   (walk/postwalk
-    (fn [expr]
-      (cond
-        (seq? expr)
-        (let [[f & args] expr]
-          (if-let [f (symbols-registry f)]
-            (apply f args)
-            (apply i/->fn f args)))
-        (symbol? expr) (expand-symbol lookup expr)
-        :else expr))
-    expr)))
+   (assemble expr lookup symbols-registry))
+  ([expr lookup registry]
+   (let [registry (merge symbols-registry registry)]
+     (walk/postwalk
+      (fn [expr]
+        (cond
+          (seq? expr)
+          (let [[f & args] expr]
+            (if-let [f (registry f)]
+              (apply f args)
+              (apply i/->fn f args)))
+          (symbol? expr) (expand-symbol registry lookup expr)
+          :else expr))
+      expr))))
 
 (comment
 
@@ -78,10 +81,12 @@
   ([expr]
    (-compile expr {}))
   ([expr lookup]
+   (-compile expr lookup {}))
+  ([expr lookup registry]
    (->
     expr
     l/ssa-bindings
-    (assemble lookup))))
+    (assemble lookup registry))))
 
 (comment
   (def c
