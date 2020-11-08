@@ -41,9 +41,9 @@
   (-invoke-with-builder [this ctx sb]
     (let [k (p/-invoke k ctx)]
       (when k
-        (p/-invoke-with-builder k ctx sb)
-        (p/-invoke-with-builder \= ctx sb)
+        (.append ^StringBuilder sb k)
+        (.append ^StringBuilder sb "=")
         (p/-invoke-with-builder v ctx sb)
-        (p/-invoke-with-builder \& ctx sb)))))
+        (.append ^StringBuilder sb "&")))))
 
 (defn ->kv [k v] (->KeyValue (->key k) v))
