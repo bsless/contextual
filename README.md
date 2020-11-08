@@ -146,13 +146,13 @@ Experimental, in development
 
 ## TODO
 
-- Unit tests
-- Map* and Tuple records
-- Ensure strings work (as advertised)
-- Generalize `StringBuilder` case to `Appendable`
-- Check option of similarly implementing `OutputStream`. Use `Writer`?
-- Bring HTTP request builder up to workable condition.
-- POC tagged template.
+- [ ] Unit tests
+- [ ] Map* and Tuple records
+- [ ] Ensure strings work (as advertised)
+- [ ] Generalize `StringBuilder` case to `Appendable`
+- [ ] Check option of similarly implementing `OutputStream`. Use `Writer`?
+- [ ] Bring HTTP request builder up to workable condition.
+- [ ] POC tagged template.
 
 ## License
 
