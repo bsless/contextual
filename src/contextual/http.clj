@@ -2,10 +2,6 @@
   (:require
    [contextual.impl.protocols :as p]
    [contextual.impl.compile :refer [-compile]]
-   [contextual.impl.string :refer [->str]]
-   [contextual.impl.control :refer [->if]]
-   [contextual.impl.invoke :refer [->fn]]
-   [contextual.impl.path :refer [->path]]
    [contextual.impl.collections :refer [->map]]
    [contextual.impl.http :refer [->kv ->query-params]])
   (:import
@@ -16,32 +12,6 @@
   (URLEncoder/encode (str s) "utf8"))
 
 (def ^:const path-sep "/")
-
-(defn query-string
-  [m]
-  (apply
-   ->str
-   (into
-    []
-    (map (fn [[k v]]
-           (->if
-            k
-            (->str
-             (->if
-              (->fn keyword? k)
-              (->fn name k)
-              k) "=" v "&"))))
-    m)))
-
-(comment
-  (def qs (query-string
-           {:a 1
-            nil 3
-            :b 2
-            :c (->path :c)}))
-  (time
-   (dotimes [_ 1e6]
-     (p/-invoke qs {:c 4}))))
 
 (def scalar?
   (some-fn
@@ -108,10 +78,6 @@
                 :e "e"})
   )
 
-#_
-(defn body->ir
-  [body]
-  `(~'-map ~body))
 (def body->ir qs->ir)
 
 (defn path->ir
