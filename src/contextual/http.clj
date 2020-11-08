@@ -1,4 +1,5 @@
 (ns contextual.http
+  (:refer-clojure :exclude [compile])
   (:require
    [contextual.impl.protocols :as p]
    [contextual.impl.compile :refer [-compile]]
@@ -216,3 +217,59 @@
    {:foo "foo"
     :c 4
     :e "e"}))
+
+(defn compile-request
+  "Compile request template to `IContext` tree which outputs a map of
+  similar form.
+  Takes:
+  - `request`, a map of at least :url, which can also contain:
+    - method: GET, POST, etc.
+    - path: a vector of segments or a single string
+    - query-params: a map or sequence of pairs
+    - body: a map or sequence of pairs
+    - form: a map or sequence of pairs
+  - `lookup`: like `contextual.core/compile`
+  - `registry`: like `contextual.core/compile`
+  - options:
+    - serialize-body & body-serializer: when the former is true and the
+      latter is provided, will serialize body to a string (after evaluation)
+      with the provided serializer
+    - serialize-form & form-serializer: same as with body.
+    - serialize-query-params: will serialize the query params at the end of the url if true.
+  "
+  {:arglists
+   '([{:keys [url path query-params body form method headers]}]
+     [{:keys [url path query-params body form method headers]}
+      lookup]
+     [{:keys [url path query-params body form method headers]}
+      lookup
+      registry]
+     [{:keys [url path query-params body form method headers]}
+      lookup
+      registry
+      {:keys [serialize-query-params
+              serialize-body
+              serialize-form
+              form-serializer
+              body-serializer]}])}
+  ([req]
+   (compile-request req {}))
+  ([req lookup]
+   (compile-request req lookup {}))
+  ([req lookup registry]
+   (compile-request req lookup registry {}))
+  ([req
+    lookup
+    registry
+    {:keys [serialize-body
+            serialize-form
+            form-serializer
+            body-serializer] :as opts}]
+   (assert (and serialize-body (not (fn? body-serializer)))
+           "Must provide body-serializer fn when serialize-body is true.")
+   (assert (and serialize-form (not (fn? form-serializer)))
+           "Must provide form-serializer fn when serialize-body is true.")
+   (-compile
+    (request req opts)
+    lookup
+    (merge http-symbols-registry registry))))
