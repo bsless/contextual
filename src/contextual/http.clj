@@ -269,7 +269,11 @@
            "Must provide body-serializer fn when serialize-body is true.")
    (assert (and serialize-form (not (fn? form-serializer)))
            "Must provide form-serializer fn when serialize-body is true.")
-   (-compile
-    (request req opts)
-    lookup
-    (merge http-symbols-registry registry))))
+   (let [lookup (merge
+                 lookup
+                 (when serialize-body {'body-serializer body-serializer})
+                 (when serialize-form {'form-serializer form-serializer}))]
+     (-compile
+      (request req opts)
+      lookup
+      (merge http-symbols-registry registry)))))
