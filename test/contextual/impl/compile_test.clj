@@ -8,6 +8,40 @@
    [contextual.impl.protocols :as p]
    [clojure.test :as t]))
 
+(t/deftest unnest-str1
+  (t/testing "Can only be called on str"
+    (t/is (thrown? java.lang.AssertionError (sut/unnest-str1 '(a b c)))))
+  (t/testing "Identity"
+    (t/is (= '(str b c) (sut/unnest-str1 '(str b c)))))
+  (t/testing "One level unnesting"
+    (t/is (= '(str a b c) (sut/unnest-str1 '(str (str a) b c))))
+    (t/is (= '(str "a" b c d) (sut/unnest-str1 '(str "a" b (str c d))))))
+  (t/testing "Twu level unnesting"
+    (t/is (= '(str (str a) b c) (sut/unnest-str1 '(str (str (str a)) b c))))))
+
+(t/deftest unnest-str
+  (t/testing "Can only be called on str"
+    (t/is (thrown? java.lang.AssertionError (sut/unnest-str '(a b c)))))
+  (t/testing "Identity"
+    (t/is (= '(str b c) (sut/unnest-str '(str b c)))))
+  (t/testing "One level unnesting"
+    (t/is (= '(str a b c) (sut/unnest-str '(str (str a) b c))))
+    (t/is (= '(str "a" b c d) (sut/unnest-str '(str "a" b (str c d))))))
+  (t/testing "Twu level unnesting"
+    (t/is (= '(str a b c) (sut/unnest-str '(str (str (str a)) b c))))))
+
+(t/deftest flatten-strings
+  (t/testing ""
+    (t/is
+     (=
+      '(let [x (str 1 2)]
+         (let [y 3]
+           (str x y 4 5)))
+      (sut/flatten-strings
+       '(let [x (str 1 (str 2))]
+          (let [y 3]
+            (str x y (str 4 5)))))))))
+
 (t/deftest lookup-table
   (t/testing "Lookup table resolves to bound symbol"
     (t/is (= [1] (sut/-compile '[a] {'a 1}))))
