@@ -113,7 +113,7 @@
             serialize-body
             serialize-form]}]
    (let [url (cond->
-                 url
+                 (path->ir url url-sep)
                path (as-> $ `(~'str ~$ "/" ~(path->ir path)))
                serialize-query-params (as-> $ `(~'str ~$ "?" ~(qs->ir query-params))))]
      `(~'-map
