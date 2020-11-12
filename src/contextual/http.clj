@@ -13,6 +13,7 @@
   (URLEncoder/encode (str s) "utf8"))
 
 (def ^:const path-sep "/")
+(def ^:const url-sep ".")
 
 (def scalar?
   (some-fn
@@ -79,15 +80,21 @@
                 :e "e"})
   )
 
+(defn strexpr?
+  [expr]
+  (= (first expr) 'str))
 
 (defn path->ir
-  [path]
-  (if (string? path)
-    path
-    (let [path (interpose path-sep path)
-          path (transduce compress-string-xf conj [] path)]
-      (if (= 1 (count path)) (first path)
-          (list* 'str path)))))
+  ([path]
+   (path->ir path path-sep))
+  ([path sep]
+   (cond
+     (string? path) path
+     (strexpr? path) path
+     :else (let [path (interpose sep path)
+                 path (transduce compress-string-xf conj [] path)]
+             (if (= 1 (count path)) (first path)
+                 (list* 'str path))))))
 
 (comment
   (path->ir "a/b")
