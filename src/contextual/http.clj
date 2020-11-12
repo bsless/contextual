@@ -79,7 +79,6 @@
                 :e "e"})
   )
 
-(def body->ir qs->ir)
 
 (defn path->ir
   [path]
@@ -116,8 +115,14 @@
             :url url}
          headers (assoc :headers (->map headers))
          (and query-params (not serialize-query-params)) (assoc :query-params `(~'-map ~query-params))
-         body (assoc :body (if serialize-body (list 'body-serializer (body->ir body)) `(~'-map ~body)))
-         form (assoc :form (if serialize-form (list 'form-serializer (body->ir form)) `(~'-map ~form))))))))
+         body (assoc :body (let [body `(~'-map ~body)]
+                             (if serialize-body
+                               (list 'body-serializer body)
+                               body)))
+         form (assoc :form (let [form `(~'-map ~form)]
+                             (if serialize-form
+                               (list 'form-serializer form)
+                               form))))))))
 
 (comment
   (p/-invoke
