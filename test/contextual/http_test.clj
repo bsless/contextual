@@ -109,3 +109,153 @@
           (sut/request '{:url "https://bar.com"
                          :form {:a 1}}
                        {:serialize-form true}))))))
+
+(t/deftest compile-request
+
+  (t/testing "URL compiler"
+    (t/testing "Simple"
+      (t/is
+       (= {:url "https://foo.bar.com"
+           :method "GET"}
+          (invoke
+           (sut/compile-request
+            '{:url "https://foo.bar.com"})
+           {}))))
+
+    (t/testing "Expression"
+      (t/is
+       (= {:url (str "https://foo.bar.com")
+           :method "GET"}
+          (invoke
+           (sut/compile-request
+            '{:url (str "https://" (path :foo) ".bar.com")}
+            {})
+           {:foo "foo"}))))
+
+    (t/testing "Vector"
+      (t/is
+       (= {:url (str "https://hello.foo.bar.com")
+           :method "GET"}
+          (invoke
+           (sut/compile-request
+            '{:url ["https://hello" (path :foo) "bar.com"]}
+            {})
+           {:foo "foo"})))))
+
+  (t/testing "Path compiler"
+    (t/testing "Simple"
+      (t/is
+       (= {:url "https://foo.bar.com/fizz/buzz"
+           :method "GET"}
+          (invoke
+           (sut/compile-request
+            '{:url "https://foo.bar.com"
+              :path "fizz/buzz"}
+            {})
+           {}))))
+
+    (t/testing "Expression"
+      (t/is
+       (= {:url (str "https://fizz.bar.com/buzz")
+           :method "GET"}
+          (invoke
+           (sut/compile-request
+            '{:url (str "https://" (path :foo) ".bar.com")
+              :path [(path :bar)]}
+            {})
+           {:foo "fizz"
+            :bar "buzz"}))))
+
+    (t/testing "Vector"
+      (t/is
+       (= {:url "https://hello.fizz.bar.com/fizz/quux"
+           :method "GET"}
+          (invoke
+           (sut/compile-request
+            '{:url ["https://hello" (path :foo) "bar.com"]
+              :path ["fizz" (path :buzz)]}
+            {})
+           {:foo "fizz"
+            :buzz "quux"})))))
+
+  (t/testing "Query params"
+    (t/testing "As map")
+    (t/is
+     (= {:url "https://foo.bar.com"
+         :method "GET"
+         :query-params {:a 1}}
+        (invoke
+         (sut/compile-request
+          '{:url "https://foo.bar.com"
+            :query-params {:a 1}}
+          {})
+         {})))
+
+    (t/testing "Serialized"
+      (t/is
+       (= {:url "https://foo.bar.com?a=1&"
+           :method "GET"}
+          (invoke
+           (sut/compile-request
+            '{:url "https://foo.bar.com"
+              :query-params {:a 1}}
+            {}
+            {}
+            {:serialize-query-params true})
+           {})))))
+
+  (t/testing "Body"
+
+    (t/testing "As map"
+      (t/is
+       (= {:url "https://bar.com"
+           :method "GET"
+           :body {:a 1}}
+          (invoke
+           (sut/compile-request
+            '{:url "https://bar.com"
+              :body {:a 1}})
+           {}))))
+
+    (t/testing "Serialized"
+      (t/is
+       (= {:url "https://bar.com"
+           :body "{:a 1}"
+           :method "GET"}
+          (invoke
+           (sut/compile-request
+            '{:url "https://bar.com"
+              :body {:a 1}}
+            {}
+            {}
+            {:serialize-body true
+             :body-serializer pr-str})
+           {})))))
+
+  (t/testing "Form"
+
+    (t/testing "As map"
+      (t/is
+       (= {:url "https://bar.com"
+           :method "GET"
+           :form {:a 1}}
+          (invoke
+           (sut/compile-request
+            '{:url "https://bar.com"
+              :form {:a 1}})
+           {}))))
+
+    (t/testing "Serialized"
+      (t/is
+       (= {:url "https://bar.com"
+           :form "{:a 1}"
+           :method "GET"}
+          (invoke
+           (sut/compile-request
+            '{:url "https://bar.com"
+              :form {:a 1}}
+            {}
+            {}
+            {:serialize-form true
+             :form-serializer pr-str})
+           {}))))))
