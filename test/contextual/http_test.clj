@@ -72,14 +72,16 @@
                        {:serialize-query-params true})))))
 
   (t/testing "Body"
-    (t/testing "As map")
-    (t/is
-     (= '(-map {:url "https://bar.com"
-                :method "GET"
-                :body (-map {:a 1})})
-        (sut/request '{:url "https://bar.com"
-                       :body {:a 1}}
-                     {})))
+
+    (t/testing "As map"
+      (t/is
+       (= '(-map {:url "https://bar.com"
+                  :method "GET"
+                  :body (-map {:a 1})})
+          (sut/request '{:url "https://bar.com"
+                         :body {:a 1}}
+                       {}))))
+
     (t/testing "Serialized"
       (t/is
        (= '(-map {:url "https://bar.com"
@@ -90,14 +92,15 @@
                        {:serialize-body true})))))
 
   (t/testing "Form"
-    (t/testing "As map")
-    (t/is
-     (= '(-map {:url "https://bar.com"
-                :method "GET"
-                :form (-map {:a 1})})
-        (sut/request '{:url "https://bar.com"
-                       :form {:a 1}}
-                     {})))
+    (t/testing "As map"
+      (t/is
+       (= '(-map {:url "https://bar.com"
+                  :method "GET"
+                  :form (-map {:a 1})})
+          (sut/request '{:url "https://bar.com"
+                         :form {:a 1}}
+                       {}))))
+
     (t/testing "Serialized"
       (t/is
        (= '(-map {:url "https://bar.com"
