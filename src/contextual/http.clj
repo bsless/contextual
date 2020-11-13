@@ -277,10 +277,12 @@
             serialize-form
             form-serializer
             body-serializer] :as opts}]
-   (assert (and serialize-body (not (fn? body-serializer)))
-           "Must provide body-serializer fn when serialize-body is true.")
-   (assert (and serialize-form (not (fn? form-serializer)))
-           "Must provide form-serializer fn when serialize-body is true.")
+   (when serialize-body
+     (assert (fn? body-serializer)
+             "Must provide body-serializer fn when serialize-body is true."))
+   (when serialize-form
+     (assert (fn? form-serializer)
+             "Must provide form-serializer fn when serialize-body is true."))
    (let [lookup (merge
                  lookup
                  (when serialize-body {'body-serializer body-serializer})
