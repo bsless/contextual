@@ -2,6 +2,8 @@
   (:import
    (java.lang StringBuilder Appendable)))
 
+(set! *warn-on-reflection* true)
+
 (defprotocol IContext
   (-invoke [this ctx]))
 
@@ -36,3 +38,16 @@
     (.append ^StringBuilder sb this))
   nil
   (-invoke-with-builder [this ctx sb]))
+
+(defprotocol IBox
+  (-get [this])
+  (-boxed? [this]))
+
+(extend-protocol IBox
+  Object
+  (-get [this] this)
+  (-boxed? [this] false)
+  nil
+  (-get [this] this)
+  (-boxed? [this] false))
+

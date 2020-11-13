@@ -6,6 +6,7 @@
    [contextual.impl.let :as l :refer [->let]]
    [contextual.impl.string :as s :refer [->str ->join]]
    [contextual.impl.invoke :as i]
+   [contextual.impl.box :as b]
    [contextual.impl.protocols :as p]))
 
 (def symbols-registry
@@ -17,15 +18,41 @@
    'path ->path
    'let ->let})
 
+(defn unnest-str1
+  [expr]
+  (assert (= 'str (first expr)) "must only be called on str expression.")
+  (mapcat
+   (fn [expr]
+     (if (and (seq? expr) (= 'str (first expr)))
+       (rest expr)
+       [expr]))
+   expr))
+
+(defn unnest-str
+  [expr]
+  (let [expr' (unnest-str1 expr)]
+    (if (= expr expr')
+      expr
+      (recur expr'))))
+
+(defn flatten-strings
+  [expr]
+  (walk/postwalk
+   (fn [expr]
+     (if (and (seq? expr) (= 'str (first expr)))
+       (unnest-str1 expr)
+       expr))
+   expr))
+
 (defn maybe-resolve
   [s]
   (when-let [v (resolve s)]
     (deref v)))
 
 (defn expand-symbol
-  [lookup s]
+  [registry lookup s]
   (or
-   (and (symbols-registry s) s)
+   (and (registry s) s)
    (maybe-resolve s)
    (and (l/binding-symbol? s) s)
    (get lookup s (l/->lookup s))))
@@ -34,17 +61,29 @@
   ([expr]
    (assemble expr {}))
   ([expr lookup]
-   (walk/postwalk
-    (fn [expr]
-      (cond
-        (seq? expr)
-        (let [[f & args] expr]
-          (if-let [f (symbols-registry f)]
-            (apply f args)
-            (apply i/->fn f args)))
-        (symbol? expr) (expand-symbol lookup expr)
-        :else expr))
-    expr)))
+   (assemble expr lookup symbols-registry))
+  ([expr lookup registry]
+   (let [registry (merge symbols-registry registry)]
+     (walk/postwalk
+      (fn [expr]
+        (cond
+          (seq? expr)
+          (let [[f & args] expr]
+            (if-let [f' (registry f)]
+              (case f
+                path (apply f' (map b/unbox args))
+                (apply f' args))
+              (apply i/->fn f args)))
+          (symbol? expr) (expand-symbol registry lookup expr)
+          (or
+           (number? expr)
+           (char? expr)
+           (string? expr)
+           (keyword? expr)
+           (nil? expr)
+           ) (b/->box expr)
+          :else expr))
+      expr))))
 
 (comment
 
@@ -78,10 +117,13 @@
   ([expr]
    (-compile expr {}))
   ([expr lookup]
+   (-compile expr lookup {}))
+  ([expr lookup registry]
    (->
     expr
     l/ssa-bindings
-    (assemble lookup))))
+    flatten-strings
+    (assemble lookup registry))))
 
 (comment
   (def c
