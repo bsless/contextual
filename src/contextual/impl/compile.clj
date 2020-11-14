@@ -22,8 +22,8 @@
   [expr]
   (walk/postwalk
    (fn [expr]
-     (if (and (seq? expr) (= 'str (first expr)))
-       (unnest-str1 expr)
+     (if (and (seq? expr) (s/strexpr? expr))
+       (s/unnest-str1* expr)
        expr))
    expr))
 

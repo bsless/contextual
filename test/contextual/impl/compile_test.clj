@@ -18,7 +18,16 @@
       (sut/flatten-strings
        '(let [x (str 1 (str 2))]
           (let [y 3]
-            (str x y (str 4 5)))))))))
+            (str x y (str 4 5)))))))
+    (t/is
+     (=
+      '(let [x (str 1 2)]
+         (let [y 3]
+           (str x y 4 5 "wvz")))
+      (sut/flatten-strings
+       '(let [x (str 1 (str 2))]
+          (let [y 3]
+            (str x y (str 4 5) "w" (str "v" "z")))))))))
 
 (t/deftest lookup-table
   (t/testing "Lookup table resolves to bound symbol"

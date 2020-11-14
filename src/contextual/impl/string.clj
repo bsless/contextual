@@ -105,3 +105,18 @@
       expr
       (recur expr'))))
 
+(defn unnest-str1*
+  [expr]
+  (assert (strexpr? expr) "must only be called on str expression.")
+  (apply
+   list
+   (transduce
+    (comp
+     (mapcat
+      (fn [expr]
+        (if (and (seq? expr) (strexpr? expr))
+          (rest expr)
+          [expr])))
+     compress-string-xf)
+    conj
+    expr)))
