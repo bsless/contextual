@@ -1,6 +1,6 @@
 (ns contextual.impl.let
   (:require
-   [clojure.walk :as walk]
+   [contextual.walk :as walk]
    [contextual.impl.protocols :as p]
    [contextual.impl.environment :as e]))
 

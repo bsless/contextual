@@ -1,6 +1,6 @@
 (ns contextual.impl.compile
   (:require
-   [clojure.walk :as walk]
+   [contextual.walk :as walk]
    [contextual.impl.control :as control :refer [->if ->or ->and]]
    [contextual.impl.path :as path :refer [->path]]
    [contextual.impl.let :as l :refer [->let]]

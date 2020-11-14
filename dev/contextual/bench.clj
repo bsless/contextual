@@ -17,15 +17,26 @@
 
 (def scitx (sci/init {}))
 
+(defn bench-full-vs
+  [expr]
+  (println "Benchmarking expr:" expr)
+  (println "\nContextual")
+  (cc/quick-bench
+   (p/-invoke (c/-compile expr) {}))
+  (println "\nSCI")
+  (cc/quick-bench
+   (sci/eval-form scitx expr))
+  (println))
+
 (defn bench-vs
   [expr]
   (println "Benchmarking expr:" expr)
-  (println "Contextual")
+  (println "\nContextual")
   (let [e' (c/-compile expr)]
-    (cc/bench
+    (cc/quick-bench
      (p/-invoke e' {})))
-  (println "SCI")
-  (cc/bench
+  (println "\nSCI")
+  (cc/quick-bench
    (sci/eval-form scitx expr))
   (println))
 
@@ -40,7 +51,19 @@
   (bench-vs nested-str3)
   )
 
+(defn all-full-benchmarks
+  []
+  (bench-full-vs simple-expr)
+  (bench-full-vs simple-let)
+  (bench-full-vs nested-let)
+  (bench-full-vs string-1)
+  (bench-full-vs string-3)
+  (bench-full-vs string-10)
+  (bench-full-vs nested-str3)
+  )
+
 (comment
+  (all-full-benchmarks)
   (all-benchmarks))
 
 ;;; Benchmarking expr: (+ 1 2)
