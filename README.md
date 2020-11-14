@@ -32,6 +32,14 @@ application with reasonable performance.
 - Compile: An expression is compiled to a class hierarchy representing its tree structure
 - Invoke: Evaluate the expression with given context. Only method calls, zero interpretations.
 
+## Scope
+
+Currently contextual is not a complete Clojure interpreter, but it
+works, it's fast, and can be used.
+
+Adding support for all of Clojure is on the roadmap, but features which
+degrade performance might not be added.
+
 ## Usage
 
 TODO
