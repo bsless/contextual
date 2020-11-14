@@ -8,7 +8,9 @@
   ([expr]
    (compile expr {}))
   ([expr lookup]
-   (c/-compile expr lookup)))
+   (compile expr lookup {}))
+  ([expr lookup registry]
+   (c/-compile expr lookup registry)))
 
 (defn invoke
   [expr context]
