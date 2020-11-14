@@ -120,3 +120,16 @@
      compress-string-xf)
     conj
     expr)))
+
+(deftype Sbf [f]
+  p/IStringBuild
+  (-invoke-with-builder [this ctx sb]
+    (f sb)))
+
+(defn ->sbf [f] (Sbf. f))
+
+(defn trim-sb
+  [^StringBuilder sb]
+  (.setLength sb (unchecked-dec-int (.length sb))))
+
+(def trim (->sbf trim-sb))
