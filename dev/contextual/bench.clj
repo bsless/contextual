@@ -1,5 +1,6 @@
 (ns contextual.bench
   (:require
+   [jmh.core :as jmh]
    [contextual.impl.compile :as c]
    [contextual.impl.protocols :as p]
    [sci.core :as sci]
@@ -258,3 +259,35 @@
 ;;; openjdk version "1.8.0_272"
 ;;; OpenJDK Runtime Environment (build 1.8.0_272-8u272-b10-0ubuntu1~20.04-b10)
 ;;; OpenJDK 64-Bit Server VM (build 25.272-b10, mixed mode)
+
+(def bench-env
+  '{:benchmarks
+    [{:name :contextual, :fn contextual.impl.protocols/-invoke :args [:state/expression :param/empty]}
+     {:name :sci, :fn sci.core/eval-form, :args [:state/sci-env :param/expr]}]
+
+    :states
+    {:expression {:setup {:fn contextual.impl.compile/-compile
+                          :args [:param/expr]}}
+     :sci-env {:setup {:fn sci.core/init :args [:param/empty]}}}
+
+    :params
+    {:empty {}}
+})
+
+(def bench-opts
+  {:type :quick
+   :params {:expr [
+                   '(+ 1 2)
+                   '(let [x 1 y 2] (+ x y))
+                   '(let [x 1] (let [y 2] (+ x y)))
+                   '(str 1)
+                   '(str 1 2 3)
+                   '(str 1 2 3 4 5 6 7 8 9 10)
+                   '(str 1 (str 2 (str 3)))
+                   ]}
+   :status true
+   #_#_
+   :profilers ["gc"]})
+
+(jmh/run bench-env bench-opts)
+(def res *1)
