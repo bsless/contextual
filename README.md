@@ -106,6 +106,9 @@ Otherwise, a symbol will be interpreted as an environment lookup.
 
 ## Performance vs. SCI
 
+Since contextual's model is compile-once run-many, invoke is
+significantly faster than sci's eval:
+
 ```clojure
 (require '[sci.core :as sci])
 
@@ -139,6 +142,9 @@ Otherwise, a symbol will be interpreted as an environment lookup.
 ;;;    Execution time upper quantile : 1.179156 µs (97.5%)
 ;;;                    Overhead used : 9.414056 ns
 ```
+
+In most cases, compiling + invoking contextual code will also be faster
+than sci.
 
 ## Status
 
