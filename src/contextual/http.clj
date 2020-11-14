@@ -48,7 +48,7 @@
                 (map (fn [[k v]] (emit-kv-pair k v)))
                 compress-string-xf)
                m)]
-    `(~'str ~@parts)))
+    `(~'str ~@(conj parts '__qs-trim))))
 
 (comment
   (def ir (qs->ir
@@ -60,7 +60,7 @@
             '(path :e) 3
             '(path :f) 2
             }))
-  (def c (-compile ir {} {'kv ->kv}))
+  (def c (-compile ir {'__qs-trim contextual.impl.string/trim} {'kv ->kv}))
 
   (p/-invoke c {:c 4
                 :e "e"})
@@ -266,7 +266,7 @@
      (assert (fn? form-serializer)
              "Must provide form-serializer fn when serialize-body is true."))
    (let [lookup (merge
-                 lookup
+                 (assoc lookup '__qs-trim contextual.impl.string/trim)
                  (when serialize-body {'body-serializer body-serializer})
                  (when serialize-form {'form-serializer form-serializer}))]
      (-compile

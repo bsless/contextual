@@ -65,7 +65,7 @@
                      {})))
     (t/testing "Serialized"
       (t/is
-       (= '(-map {:url (str (str "https://" (path :foo) ".bar.com") "?" (str "a=1&"))
+       (= '(-map {:url (str (str "https://" (path :foo) ".bar.com") "?" (str "a=1&" __qs-trim))
                   :method "GET"})
           (sut/request '{:url (str "https://" (path :foo) ".bar.com")
                          :query-params {:a 1}}
@@ -193,7 +193,7 @@
 
     (t/testing "Serialized"
       (t/is
-       (= {:url "https://foo.bar.com?a=1&"
+       (= {:url "https://foo.bar.com?a=1"
            :method "GET"}
           (invoke
            (sut/compile-request
