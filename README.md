@@ -147,12 +147,23 @@ Experimental, in development
 ## TODO
 
 - [X] Unit tests
-- [ ] Map* and Tuple records
+- [ ] Tuple records
+- [X] Map* records
 - [X] Ensure strings work (as advertised)
 - [ ] Generalize `StringBuilder` case to `Appendable`
 - [ ] Check option of similarly implementing `OutputStream`. Use `Writer`?
-- [ ] Bring HTTP request builder up to workable condition.
+- [X] Bring HTTP request builder up to workable condition.
+- [ ] Handle different types of expressions in request better (vector, expr, etc.)
+- [ ] Faster walk?
+- [ ] More macros, (cond!)
+- [ ] Improve / control over resolution mechanism
+- [ ] Expose only safe functions by default
+- [ ] add namespaces
+- [ ] Basic interop
+- [ ] fns
 - [ ] POC tagged template.
+- [ ] Replace Records with types
+- [ ] Have types' string representation be homoiconic.
 
 ## License
 
