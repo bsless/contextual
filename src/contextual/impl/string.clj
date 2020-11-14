@@ -67,3 +67,41 @@
   [delim & args]
   (let [args (interpose delim args)]
     (apply ->str args)))
+
+(def compress-string-xf
+  (comp
+   (remove nil?)
+   (partition-by (some-fn string? char?))
+   (mapcat
+    (fn [xs]
+      (if ((some-fn string? char?) (first xs))
+        [(apply str xs)]
+        xs)))))
+
+(comment
+  (transduce compress-string-xf conj [] '[a b "c" d "e" "f" g])
+  (transduce compress-string-xf conj [] '["0" a b "c" d "e" "f" g])
+  (transduce compress-string-xf conj [] '["0" a b "c" d "e" \= "f" g])
+  (transduce compress-string-xf conj [] '["0" a b "c" (path :x y) "e" \= "f" g]))
+
+(defn strexpr?
+  [expr]
+  (= (first expr) 'str))
+
+(defn unnest-str1
+  [expr]
+  (assert (= 'str (first expr)) "must only be called on str expression.")
+  (mapcat
+   (fn [expr]
+     (if (and (seq? expr) (strexpr? expr))
+       (rest expr)
+       [expr]))
+   expr))
+
+(defn unnest-str
+  [expr]
+  (let [expr' (unnest-str1 expr)]
+    (if (= expr expr')
+      expr
+      (recur expr'))))
+

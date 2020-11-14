@@ -2,6 +2,7 @@
   (:refer-clojure :exclude [compile])
   (:require
    [contextual.impl.protocols :as p]
+   [contextual.impl.string :refer [compress-string-xf strexpr?]]
    [contextual.impl.compile :refer [-compile]]
    [contextual.impl.collections :refer [->map]]
    [contextual.impl.http :refer [->kv ->query-params]])
@@ -39,21 +40,6 @@
       (scalar? k) (list 'str (emit-scalar k) "=" v "&")
       (some? k) `(~'kv ~k ~v))))
 
-(def compress-string-xf
-  (comp
-   (remove nil?)
-   (partition-by (some-fn string? char?))
-   (mapcat
-    (fn [xs]
-      (if ((some-fn string? char?) (first xs))
-        [(apply str xs)]
-        xs)))))
-
-(comment
-  (transduce compress-string-xf conj [] '[a b "c" d "e" "f" g])
-  (transduce compress-string-xf conj [] '["0" a b "c" d "e" "f" g])
-  (transduce compress-string-xf conj [] '["0" a b "c" d "e" \= "f" g]))
-
 (defn qs->ir
   [m]
   (let [parts (into
@@ -79,10 +65,6 @@
   (p/-invoke c {:c 4
                 :e "e"})
   )
-
-(defn strexpr?
-  [expr]
-  (= (first expr) 'str))
 
 (defn path->ir
   ([path]

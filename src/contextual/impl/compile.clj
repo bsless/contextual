@@ -18,23 +18,6 @@
    'path ->path
    'let ->let})
 
-(defn unnest-str1
-  [expr]
-  (assert (= 'str (first expr)) "must only be called on str expression.")
-  (mapcat
-   (fn [expr]
-     (if (and (seq? expr) (= 'str (first expr)))
-       (rest expr)
-       [expr]))
-   expr))
-
-(defn unnest-str
-  [expr]
-  (let [expr' (unnest-str1 expr)]
-    (if (= expr expr')
-      expr
-      (recur expr'))))
-
 (defn flatten-strings
   [expr]
   (walk/postwalk
