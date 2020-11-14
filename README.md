@@ -42,7 +42,47 @@ degrade performance might not be added.
 
 ## Usage
 
-TODO
+Using contextual involves two phases: compilation and execution.
+
+Execution is always performed via `(contextual.core/invoke compiled-expr context-map)`
+
+Compilation options:
+
+- lookup: map from symbol to value. Used for resolving symbols during
+  compilation. Can contain any value, from primitive to function, i.e.
+  `{'foo clojure.core/println 'bar (->path :x y)}` is a valid lookup
+  map.
+- symbols registry: This is a map of special symbols to be resolved to
+  constructors for objects which implement the protocols `IContext` or
+  `IStringBuild`, to be used as new units of syntax and execution. An
+  extension point for users.
+
+Currently, the following compilations are available:
+
+### Expressions
+
+`(contextual.core/compile expr)`, where `expr` can contain any of the
+supported symbols or resolvable symbols.
+
+### HTTP Requests
+
+`(contextual.http/compile request)` takes a template of containing they
+keys `url path query-params body form method headers`, any of which
+besides `url` is optional, and emits an invokable which would emit a map
+with a corresponding structure after invoking all the expressions
+contained in it.
+
+Special HTTP options:
+- `serialize-body`: when not false-y indicates the request body should
+  be serialized with the provided `body-serializer`.
+- `body-serializer`: any function which will serialize the emitted
+  request body.
+- `serialize-form`: when not false-y indicates the request form should
+  be serialized with the provided `form-serializer`.
+- `form-serializer`: any function which will serialize the emitted
+  request form.
+- `serialize-query-params`: when truth-y will append the query params to
+  the end of the URL instead of emitting them as a map. i.e. `{:a 1 :b 2}` -> `?a=1&b=2`.
 
 ## Design
 
