@@ -168,7 +168,7 @@ Experimental, in development
 - [ ] Check option of similarly implementing `OutputStream`. Use `Writer`?
 - [X] Bring HTTP request builder up to workable condition.
 - [ ] Handle different types of expressions in request better (vector, expr, etc.)
-- [ ] Faster walk?
+- [X] Faster walk?
 - [ ] More macros, (cond!)
 - [ ] Improve / control over resolution mechanism
 - [ ] Expose only safe functions by default
