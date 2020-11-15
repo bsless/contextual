@@ -172,10 +172,10 @@
            :method "GET"}
           (invoke
            (sut/compile-request
-            '{:url ["https://hello" (path :foo) "bar.com"]
+            '{:url ["https://hello" (path :foo :bar) "bar.com"]
               :path ["fizz" (path :buzz)]}
             {})
-           {:foo "fizz"
+           {:foo {:bar "fizz"}
             :buzz "quux"})))))
 
   (t/testing "Query params"
