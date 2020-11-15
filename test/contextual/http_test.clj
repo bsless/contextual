@@ -55,14 +55,14 @@
 
 
   (t/testing "Query params"
-    (t/testing "As map")
-    (t/is
-     (= '(-map {:url (str "https://" (path :foo) ".bar.com")
-                :method "GET"
-                :query-params (-map {:a 1})})
-        (sut/request '{:url (str "https://" (path :foo) ".bar.com")
-                       :query-params {:a 1}}
-                     {})))
+    (t/testing "As map"
+      (t/is
+       (= '(-map {:url (str "https://" (path :foo) ".bar.com")
+                  :method "GET"
+                  :query-params (-map {:a 1})})
+          (sut/request '{:url (str "https://" (path :foo) ".bar.com")
+                         :query-params {:a 1}}
+                       {}))))
     (t/testing "Serialized"
       (t/is
        (= '(-map {:url (str (str "https://" (path :foo) ".bar.com") "?" (str "a=1&" __qs-trim))
