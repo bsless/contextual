@@ -1,3 +1,7 @@
+[![Clojars Project](https://img.shields.io/clojars/v/bsless/contextual.svg)](https://clojars.org/bsless/contextual)
+[![cljdoc badge](https://cljdoc.org/badge/bsless/contextual)](https://cljdoc.org/d/bsless/contextual/CURRENT)
+[![CircleCI](https://circleci.com/gh/bsless/contextual/tree/master.svg?style=shield)](https://circleci.com/gh/bsless/contextual/tree/master)
+
 # Contextual
 
 A two-phase Clojure interpreter. Write an expression once, run it many
