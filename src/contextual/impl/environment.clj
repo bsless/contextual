@@ -1,5 +1,6 @@
 (ns contextual.impl.environment
   (:require
+   [contextual.impl.frame :as f]
    [contextual.impl.protocols :as p]))
 
 (declare ->Env)
@@ -9,10 +10,12 @@
   (throw (new RuntimeException (str "Unable to resolve symbol: " k " in this context"))))
 
 (defn -env
+  ([]
+   (f/-create f/persistent-frame-factory))
   ([k v]
-   {k v})
+   (f/-create f/persistent-frame-factory k v))
   ([k v kvs]
-   (into {k v} (partition-all 2) kvs)))
+   (f/-create f/persistent-frame-factory k v kvs)))
 
 (extend-protocol p/IEnv
   nil
@@ -27,15 +30,17 @@
   p/IEnv
   (-lookup [this k]
     (if curr
-      (if-let [f (find curr k)]
-        (val f)
-        (p/-lookup prev k))
+      (let [f (p/-lookup curr k)]
+        (if (f/not-found? f)
+          (p/-lookup prev k)
+          f))
       (die k)))
   (-lookup [this k nf]
     (if curr
-      (if-let [f (find curr k)]
-        (val f)
-        (p/-lookup prev k))
+      (let [f (p/-lookup curr k)]
+        (if (f/not-found? f)
+          (p/-lookup prev k)
+          f))
       nf))
   (-with [this k v]
     (->Env (-env k v) this))
