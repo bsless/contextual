@@ -10,6 +10,7 @@
    [contextual.impl.protocols :as p]))
 
 (def symbols-registry
+  "Assembler special forms which are expanded to specially compiled classes."
   {'if ->if
    'or ->or
    'and ->and
@@ -41,6 +42,11 @@
    (get lookup s (l/->lookup s))))
 
 (defn assemble
+  "Assemble an expression `expr` with the following optional arguments:
+  `lookup`: A map from symbol to value. Can contain any type of value.
+  Usually constants, Path*s or functions.
+  `registry`: a symbol -> special form emitter map. See
+  [[symbols-registry]] as a default value."
   ([expr]
    (assemble expr {}))
   ([expr lookup]

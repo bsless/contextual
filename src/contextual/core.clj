@@ -6,6 +6,16 @@
    [contextual.impl.path :as path]))
 
 (defn compile
+  "Compile an expression into an [[invoke]]able class structure
+  representing its evaluation. Takes two optional arguments:
+  - `lookup`: a symbol -> value map for symbol resolution during
+  expression compilation. These would typically be constants (strings,
+  numbers), predefined paths (see [[path]]) or functions. To get all the
+  public symbols in a namespace as valid lookup values, use
+  [[namespace->lookup]] for convenience.
+  - `registry`: Extension entry point for developers. Allows adding new
+  special forms during compilation. Requires familiarity with library
+  implementation details, use with care."
   ([expr]
    (compile expr {}))
   ([expr lookup]
