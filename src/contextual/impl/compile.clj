@@ -37,7 +37,6 @@
   [registry lookup s]
   (or
    (and (registry s) s)
-   (maybe-resolve s)
    (and (l/binding-symbol? s) s)
    (get lookup s (l/->lookup s))))
 
