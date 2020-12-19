@@ -8,6 +8,8 @@
    [contextual.impl.protocols :as p]
    [clojure.test :as t]))
 
+(defonce lookup (into {} (map (fn [[k v]] [k (deref v)])) (ns-publics 'clojure.core)))
+
 (t/deftest flatten-strings
   (t/testing ""
     (t/is
@@ -38,10 +40,10 @@
 (t/deftest invoke
   (t/testing "Function invoke"
     (t/is
-     (= 3 (p/-invoke (sut/-compile '(+ 1 2)) {}))))
+     (= 3 (p/-invoke (sut/-compile '(+ 1 2) lookup) {}))))
   (t/testing "Nested function invoke"
     (t/is
-     (= 6 (p/-invoke (sut/-compile '(+ 1 (+ 2 3))) {}))))
+     (= 6 (p/-invoke (sut/-compile '(+ 1 (+ 2 3)) lookup) {}))))
   (t/testing "Lookup function resolution"
     (t/is
      (= 6 (p/-invoke (sut/-compile '(f 1 (f 2 3)) {'f +}) {})))))
@@ -57,13 +59,13 @@
     (t/is
      (= 0 (p/-invoke
            (sut/-compile
-            '(if (= 1 0) 1 0))
+            '(if (= 1 0) 1 0) lookup)
            {}))))
   (t/testing "expression branch"
     (t/is
      (false? (p/-invoke
            (sut/-compile
-            '(if (= 1 0) 1 (= 0 1)))
+            '(if (= 1 0) 1 (= 0 1)) lookup)
            {}))))
   (t/testing "Only one branch is evaluated"
     (let [a (atom 0)
@@ -72,7 +74,7 @@
        (= 1 (p/-invoke
                 (sut/-compile
                  '(if (= 1 0) (f) (f))
-                 {'f f})
+                 (merge lookup {'f f}))
                 {})))
       (t/is
        (= 1 @a)))))
@@ -81,7 +83,7 @@
   (t/testing ""
     (t/is (= (->path :a) (sut/-compile '(path :a))))
     (t/is (= (->path :a :b) (sut/-compile '(path :a :b))))
-    (t/is (= (->fn + (->box 1) (->path :a :b)) (sut/-compile '(+ 1 (path :a :b)))))))
+    (t/is (= (->fn + (->box 1) (->path :a :b)) (sut/-compile '(+ 1 (path :a :b)) lookup)))))
 
 (t/deftest string)
 
@@ -103,7 +105,7 @@
          (sut/-compile
           '(let [x 1
                  y 2]
-             (+ x y)))
+             (+ x y)) lookup)
          {}))))
 
   (t/testing "Expression in binding"
@@ -113,7 +115,7 @@
          (sut/-compile
           '(let [x (path :x)
                  y 2]
-             (+ x y)))
+             (+ x y)) lookup)
          {:x 1}))))
 
   (t/testing "Reference expression in bindings"
@@ -123,7 +125,7 @@
          (sut/-compile
           '(let [x (path :x)
                  y (inc x)]
-             (+ x y)))
+             (+ x y)) lookup)
          {:x 1}))))
 
   (t/testing "Nested let"
@@ -133,7 +135,7 @@
          (sut/-compile
           '(let [x (path :x)]
              (let [y (inc x)]
-               (+ x y))))
+               (+ x y))) lookup)
          {:x 1}))))
 
   (t/testing "Binding shadowing in same binding"
@@ -144,7 +146,7 @@
           '(let [x (path :x)
                  x 3
                  y (inc x)]
-             (+ x y)))
+             (+ x y)) lookup)
          {:x 1}))))
 
   (t/testing "Binding shadowing in nested let"
@@ -155,5 +157,5 @@
           '(let [x (path :x)]
              (let [x 3
                    y (inc x)]
-               (+ x y))))
+               (+ x y))) lookup)
          {:x 1})))))
