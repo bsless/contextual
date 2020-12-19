@@ -2,7 +2,8 @@
   (:refer-clojure :exclude [compile])
   (:require
    [contextual.impl.protocols :as p]
-   [contextual.impl.compile :as c]))
+   [contextual.impl.compile :as c]
+   [contextual.impl.path :as path]))
 
 (defn compile
   ([expr]
@@ -11,6 +12,25 @@
    (compile expr lookup {}))
   ([expr lookup registry]
    (c/-compile expr lookup registry)))
+
+(defn path
+  [& args]
+  (apply path/->path args))
+
+(defn namespace->lookup
+  "Take a coll of namespaces and return a map of all their publicly
+  defined symbols to their corresponding vars by way of [[ns-publics]].
+  To deref the vars, pass the optional arg `deref?` a truthy value."
+  ([namespaces]
+   (namespace->lookup false namespaces))
+  ([deref? namespaces]
+   (into
+    {}
+    (comp
+     (map ns-publics)
+     cat
+     (if deref? (map (fn [[k v]] [k (deref v)])) identity))
+    namespaces)))
 
 (defn invoke
   [expr context]
