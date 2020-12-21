@@ -1,4 +1,4 @@
-(defproject bsless/contextual "0.0.0-alpha2"
+(defproject bsless/contextual "0.0.0-alpha3-SNAPSHOT"
   :description "Deferred evaluation with context"
   :url "https://github.com/bsless/contextual"
   :license {:name "EPL-2.0 OR GPL-2.0-or-later WITH Classpath-exception-2.0"
