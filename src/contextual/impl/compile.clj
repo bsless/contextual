@@ -58,9 +58,7 @@
           (seq? expr)
           (let [[f & args] expr]
             (if-let [f' (registry f)]
-              (case f
-                path (apply f' (map b/unbox args))
-                (apply f' args))
+              (apply f' args)
               (apply i/->fn f args)))
           (symbol? expr) (expand-symbol registry lookup expr)
           (or

@@ -1,6 +1,7 @@
 (ns contextual.impl.path
   (:require
-   [contextual.impl.protocols :as p]))
+   [contextual.impl.protocols :as p]
+   [contextual.impl.box :as b]))
 
 (defrecord Path [ks]
   p/IContext
@@ -33,7 +34,8 @@
 (defn ->path
   [& args]
   (let [n (count args)
-        c (get @path-builders n)]
+        c (get @path-builders n)
+        args (mapv b/unbox args)]
     (if c
       (apply c args)
       (->Path args))))
