@@ -48,7 +48,7 @@
         c (get @map-wrapper-builders n)]
     (if c
       (apply c args)
-      (->MapWrapper args))))
+      (->MapWrapper m))))
 
 (comment
   (->map {:a 1 :b 2}))
