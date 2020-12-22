@@ -27,12 +27,12 @@
   [& args]
   (apply path/->path args))
 
-(defn namespace->lookup
+(defn namespaces->lookup
   "Take a coll of namespaces and return a map of all their publicly
   defined symbols to their corresponding vars by way of [[ns-publics]].
   To deref the vars, pass the optional arg `deref?` a truthy value."
   ([namespaces]
-   (namespace->lookup false namespaces))
+   (namespaces->lookup false namespaces))
   ([namespaces deref?]
    (into
     {}
