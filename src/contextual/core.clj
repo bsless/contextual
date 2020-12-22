@@ -33,7 +33,7 @@
   To deref the vars, pass the optional arg `deref?` a truthy value."
   ([namespaces]
    (namespace->lookup false namespaces))
-  ([deref? namespaces]
+  ([namespaces deref?]
    (into
     {}
     (comp
