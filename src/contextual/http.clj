@@ -102,7 +102,7 @@
        ~(cond->
            {:method method
             :url url}
-         headers (assoc :headers (->map headers))
+         headers (assoc :headers `(~'-map ~headers))
          (and query-params (not serialize-query-params)) (assoc :query-params `(~'-map ~query-params))
          body (assoc :body (let [body `(~'-map ~body)]
                              (if serialize-body
