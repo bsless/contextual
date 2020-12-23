@@ -6,7 +6,8 @@
    [contextual.impl.path :refer [->path]]
    [contextual.impl.invoke :refer [->fn]]
    [contextual.impl.protocols :as p]
-   [clojure.test :as t]))
+   [clojure.test :as t]
+   [contextual.impl.collections :as c]))
 
 (defonce lookup (into {} (map (fn [[k v]] [k (deref v)])) (ns-publics 'clojure.core)))
 
@@ -33,9 +34,9 @@
 
 (t/deftest lookup-table
   (t/testing "Lookup table resolves to bound symbol"
-    (t/is (= [1] (sut/-compile '[a] {'a 1}))))
+    (t/is (= (c/->vector [1]) (sut/-compile '[a] {'a 1}))))
   (t/testing "Unresolved symbol is expanded to run-time resolve"
-    (t/is (= [(l/->lookup 'a)] (sut/-compile '[a])))))
+    (t/is (= (c/->vector [(l/->lookup 'a)]) (sut/-compile '[a])))))
 
 (t/deftest invoke
   (t/testing "Function invoke"

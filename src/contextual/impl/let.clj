@@ -2,6 +2,7 @@
   (:require
    [contextual.walk :as walk]
    [contextual.impl.protocols :as p]
+   [contextual.impl.box :as b]
    [contextual.impl.environment :as e]))
 
 (defn- symbol-lookup
@@ -211,9 +212,15 @@
 
 (def-bindings)
 
+(defn- unparse-bindings
+  [args]
+  (let [v (b/unbox args)]
+    (into [] (comp (partition-all 2) (map (fn [[k v]] [(b/unbox k) v])) cat) v)))
+
 (defn ->bindings
   [args]
-  (let [n (/ (count args) 2)
+  (let [args (unparse-bindings args)
+        n (/ (count args) 2)
         c (get @binding-builders n)]
     (if c
       (apply c args)
