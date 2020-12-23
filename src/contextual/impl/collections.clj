@@ -56,6 +56,9 @@
 (defrecord VectorWrapper [v]
   p/IContext
   (-invoke [this ctx]
-    (into [] (map p/-invoke) v)))
+    (into [] (map p/-invoke) v))
+  p/IBox
+  (-boxed? [this] true)
+  (-get [this] v))
 
 (defn ->vector [v] (->VectorWrapper v))
