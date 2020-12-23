@@ -7,6 +7,7 @@
    [contextual.impl.string :as s :refer [->str ->join]]
    [contextual.impl.invoke :as i]
    [contextual.impl.box :as b]
+   [contextual.impl.collections :as c]
    [contextual.impl.protocols :as p]))
 
 (def symbols-registry
@@ -61,11 +62,14 @@
               (apply f' args)
               (apply i/->fn f args)))
           (symbol? expr) (expand-symbol registry lookup expr)
+          (instance? clojure.lang.MapEntry expr) expr
+          (map? expr) (c/->map expr)
+          (vector? expr) (c/->vector expr)
           (or
-           (number? expr)
-           (char? expr)
            (string? expr)
            (keyword? expr)
+           (number? expr)
+           (char? expr)
            (nil? expr)
            ) (b/->box expr)
           :else expr))

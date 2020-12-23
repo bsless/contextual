@@ -13,6 +13,8 @@
   p/IBox
   (-get [this] x)
   (-boxed? [this] true)
+  p/IJoin
+  (-join [this] x)
   p/IContext
   (-invoke [this ctx] x)
   p/IStringBuild

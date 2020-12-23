@@ -51,3 +51,11 @@
   (-get [this] this)
   (-boxed? [this] false))
 
+(defprotocol IJoin
+  (-join [this]))
+
+(extend-protocol IJoin
+  Object
+  (-join [this] this)
+  nil
+  (-join [this] this))

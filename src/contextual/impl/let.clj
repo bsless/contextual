@@ -213,7 +213,9 @@
 
 (defn ->bindings
   [args]
-  (let [n (/ (count args) 2)
+  (let [args (p/-get args)
+        args (into [] (comp (partition-all 2) (map (fn [[k v]] [(p/-get k) v])) cat) args)
+        n (/ (count args) 2)
         c (get @binding-builders n)]
     (if c
       (apply c args)
