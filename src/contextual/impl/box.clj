@@ -29,6 +29,8 @@
   (pr-str
    (->box 1)))
 
+(defn box? [x] (instance? Box x))
+
 (defn unbox
   [x]
   (if (p/-boxed? x)
