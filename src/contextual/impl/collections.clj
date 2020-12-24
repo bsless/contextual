@@ -1,6 +1,7 @@
 (ns contextual.impl.collections
   (:require
-   [contextual.impl.protocols :as p]))
+   [contextual.impl.protocols :as p]
+   [contextual.impl.box :as b]))
 
 (defrecord MapWrapper [m]
   p/IContext
@@ -46,9 +47,11 @@
   (let [n (count m)
         args (mapcat identity m)
         c (get @map-wrapper-builders n)]
-    (if c
-      (apply c args)
-      (->MapWrapper m))))
+    (if (every? b/box? args)
+      (b/->box (reduce-kv (fn [m k v] (assoc m (b/unbox k) (b/unbox v))) {} m))
+      (if c
+        (apply c args)
+        (->MapWrapper m)))))
 
 (comment
   (->map {:a 1 :b 2}))
@@ -56,9 +59,12 @@
 (defrecord VectorWrapper [v]
   p/IContext
   (-invoke [this ctx]
-    (into [] (map p/-invoke) v))
+    (into [] (map #(p/-invoke % ctx)) v))
   p/IBox
   (-boxed? [this] true)
   (-get [this] v))
 
-(defn ->vector [v] (->VectorWrapper v))
+(defn ->vector [v]
+  (if (every? b/box? v)
+    (b/->box (mapv b/unbox v))
+    (->VectorWrapper v)))
