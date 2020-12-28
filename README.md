@@ -214,8 +214,8 @@ Experimental, in development
 - [ ] Handle different types of expressions in request better (vector, expr, etc.)
 - [X] Faster walk?
 - [ ] More macros, (cond!)
-- [ ] Improve / control over resolution mechanism
-- [ ] Expose only safe functions by default
+- [X] Improve / control over resolution mechanism
+- [X] Expose only safe functions by default (nothing is exposed by default)
 - [ ] add namespaces
 - [ ] Basic interop
 - [ ] fns
