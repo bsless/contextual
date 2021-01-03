@@ -24,7 +24,7 @@
 
 (defn flatten-strings
   [expr]
-  (walk/postwalk
+  (walk/preserving-postwalk
    (fn [expr]
      (if (and (seq? expr) (s/strexpr? expr))
        (s/unnest-str1* expr)
@@ -49,9 +49,11 @@
     (cond
       (seq? expr)
       (let [[f & args] expr]
-        (if-let [f' (registry f)]
-          (apply f' args)
-          (apply i/->fn f args)))
+        (walk/preserving-meta
+         expr
+         (if-let [f' (registry f)]
+           (apply f' args)
+           (apply i/->fn f args))))
       (symbol? expr) (expand-symbol registry lookup expr)
       (instance? clojure.lang.MapEntry expr) expr
       (map? expr) ((registry '->hashmap) expr)
@@ -77,7 +79,7 @@
    (assemble expr lookup symbols-registry))
   ([expr lookup registry]
    (let [registry (merge symbols-registry registry)]
-     (walk/postwalk (assembly-fn registry lookup) expr))))
+     (walk/preserving-postwalk (assembly-fn registry lookup) expr))))
 
 (comment
 
