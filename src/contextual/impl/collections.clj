@@ -42,6 +42,48 @@
 
 (def-map-wrappers)
 
+(defrecord OptionalMapWrapper [base m]
+  p/IContext
+  (-invoke [this ctx]
+    (persistent!
+     (reduce-kv
+      (fn [m k v]
+        (if-some [v (p/-invoke v ctx)]
+          (assoc! m (p/-invoke k ctx) v)
+          v))
+      (transient base)
+      m))))
+
+(defonce ^:private opt-map-wrapper-builders (atom {}))
+
+(defmacro ^:private def-opt-map-wrappers []
+  (let [invoke '-invoke
+        ctx 'ctx
+        name "OptionalMapWrapper"
+        base 'base
+        defs
+        (for [n (range 1 12)
+              :let [ks (map (comp symbol #(str "k" %)) (range n))
+                    vs (map (comp symbol #(str "v" %)) (range n))
+                    rec (symbol (str name n))
+                    constructor (symbol (str "->" rec))
+                    m (zipmap ks vs)
+                    step (fn [m k v] (conj m base `(if-some [v# (p/-invoke ~v ~ctx)]
+                                                   (assoc ~base (p/-invoke ~k ~ctx) v#)
+                                                   ~base)))
+                    steps (reduce-kv step [base `(p/-invoke ~base ~ctx)] m)
+                    body `(let ~steps ~base)]]
+          `(do
+             (defrecord ~rec [~base ~@(interleave ks vs)]
+               p/IContext
+               (~invoke [~'this ~ctx]
+                ~body))
+             (swap! opt-map-wrapper-builders assoc ~n ~constructor)))]
+    `(do
+       ~@defs)))
+
+(def-opt-map-wrappers)
+
 (defn ->map
   [m]
   (let [n (count m)
