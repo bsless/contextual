@@ -59,3 +59,26 @@
   {:added "1.1"}
   [f form]
   (walk (partial postwalk f) f form))
+
+(defn meta?
+  [o]
+  (instance? clojure.lang.IMeta o))
+
+(defn maybe-meta
+  [o]
+  (when (meta? o)
+    (meta o)))
+
+(defn preserving-meta
+  [o o']
+  (if (meta? o')
+    (with-meta o' (merge (maybe-meta o) (maybe-meta o')))
+    o'))
+
+(defn preserving-walk
+  [inner outer form]
+  (outer (preserving-meta form (-walk form inner))))
+
+(defn preserving-postwalk
+  [f form]
+  (preserving-walk (partial preserving-postwalk f) f form))
