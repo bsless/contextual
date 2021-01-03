@@ -5,7 +5,8 @@
    [contextual.impl.string :refer [compress-string-xf strexpr?]]
    [contextual.impl.compile :refer [-compile]]
    [contextual.impl.collections :refer [->map]]
-   [contextual.impl.http :refer [->kv ->query-params]])
+   [contextual.impl.http :refer [->kv ->query-params]]
+   [contextual.impl.collections :as c])
   (:import
    [java.net URLEncoder]))
 
@@ -86,6 +87,7 @@
 (def http-symbols-registry
   {'kv ->kv
    '-map ->map
+   '->hashmap c/->maybe-map
    'query-params ->query-params})
 
 (defn request
