@@ -95,8 +95,28 @@
         (apply c args)
         (->MapWrapper m)))))
 
+(defn ->optional-map
+  [m]
+  (let [optional (filter (comp :optional meta val) m)
+        mandatory (remove (comp :optional meta val) m)
+        base (->map (into {} mandatory))
+        c (get @opt-map-wrapper-builders (count optional))]
+    (if c
+      (apply c base (mapcat identity optional))
+      (->OptionalMapWrapper base optional))))
+
+(defn ->maybe-map
+  [m]
+  (if (some (comp :optional meta val) m)
+    (->optional-map m)
+    (->map m)))
+
 (comment
-  (->map {:a 1 :b 2}))
+  (->map {:a 1 :b 2})
+  (->map {:a 1 :b 'x})
+  (->maybe-map {:a 1 :b (with-meta 'x {:optional true})})
+  (->maybe-map '{:a ^:optional (path :x :y)})
+  )
 
 (defrecord VectorWrapper [v]
   p/IContext
