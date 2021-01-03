@@ -18,7 +18,9 @@
    'str ->str
    'join ->join
    'path ->path
-   'let ->let})
+   'let ->let
+   '->hashmap c/->map
+   '->vec c/->vector})
 
 (defn flatten-strings
   [expr]
@@ -52,8 +54,8 @@
           (apply i/->fn f args)))
       (symbol? expr) (expand-symbol registry lookup expr)
       (instance? clojure.lang.MapEntry expr) expr
-      (map? expr) (c/->map expr)
-      (vector? expr) (c/->vector expr)
+      (map? expr) ((registry '->hashmap) expr)
+      (vector? expr) ((registry '->vec) expr)
       (or
        (string? expr)
        (keyword? expr)
