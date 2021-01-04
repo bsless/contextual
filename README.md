@@ -108,6 +108,8 @@ Contextual uses records to describe behaviors. They behave like their
 corresponding clojure.core names would, with any difference noted below:
 
 - `Map`: map container which will `-invoke` every key and value with context.
+- `OptionalMapWrapper`: like map, but will discard values with
+  `:optional` metadata if they are nil.
 - `If`: Makes branching possible. Will invoke the predicate, then either
   branch based on the result.
 - `Fn`: function container. Will `-invoke` all of a function's arguments
