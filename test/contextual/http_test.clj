@@ -230,6 +230,23 @@
             {}
             {:serialize-body true
              :body-serializer pr-str})
+           {}))))
+
+    (t/testing "Serialized"
+      (t/is
+       (= {:url "https://bar.com"
+           :headers {:foo "{:a 1}"}
+           :body "{:a 1}"
+           :method "GET"}
+          (invoke
+           (sut/compile-request
+            '{:url "https://bar.com"
+              :headers {:foo body}
+              :body {:a 1}}
+            {}
+            {}
+            {:serialize-body true
+             :body-serializer pr-str})
            {})))))
 
   (t/testing "Form"

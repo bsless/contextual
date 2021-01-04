@@ -2,6 +2,7 @@
   (:refer-clojure :exclude [compile])
   (:require
    [contextual.impl.protocols :as p]
+   [contextual.impl.path :refer [->path]]
    [contextual.impl.string :refer [compress-string-xf strexpr?]]
    [contextual.impl.compile :refer [-compile]]
    [contextual.impl.collections :refer [->map]]
@@ -209,6 +210,20 @@
     :c 4
     :e "e"}))
 
+(defn- -compile-request
+  [{:keys [body headers] :as request} lookup registry]
+  (if (and body headers (some #(= 'body %) (tree-seq coll? identity headers)))
+    (let [request (assoc request :body 'body)
+          lookup (assoc lookup 'body (->path ::body))
+          body (-compile body lookup registry)
+          request (-compile request lookup registry)]
+      (reify p/IContext
+        (-invoke [this ctx]
+          (let [body' (p/-invoke body ctx)
+                ctx (assoc ctx ::body body')]
+            (p/-invoke request ctx)))))
+    (-compile request lookup registry)))
+
 (defn compile-request
   "Compile request template to `IContext` tree which outputs a map of
   similar form.
@@ -266,7 +281,7 @@
                  (assoc lookup '__qs-trim contextual.impl.string/trim)
                  (when serialize-body {'body-serializer body-serializer})
                  (when serialize-form {'form-serializer form-serializer}))]
-     (-compile
+     (-compile-request
       (request req opts)
       lookup
       (merge http-symbols-registry registry)))))
