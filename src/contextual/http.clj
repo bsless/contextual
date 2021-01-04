@@ -5,7 +5,8 @@
    [contextual.impl.string :refer [compress-string-xf strexpr?]]
    [contextual.impl.compile :refer [-compile]]
    [contextual.impl.collections :refer [->map]]
-   [contextual.impl.http :refer [->kv ->query-params]])
+   [contextual.impl.http :refer [->kv ->query-params]]
+   [contextual.impl.collections :as c])
   (:import
    [java.net URLEncoder]))
 
@@ -86,6 +87,7 @@
 (def http-symbols-registry
   {'kv ->kv
    '-map ->map
+   '->hashmap c/->maybe-map
    'query-params ->query-params})
 
 (defn request
@@ -97,18 +99,16 @@
    (let [url (cond->
                  (path->ir url url-sep)
                path (as-> $ `(~'str ~$ "/" ~(path->ir path)))
-               serialize-query-params (as-> $ `(~'str ~$ "?" ~(qs->ir query-params))))]
+               serialize-query-params (as-> $ `(~'str ~$ "?" ~(qs->ir query-params))))
+         body (when body (if serialize-body (list 'body-serializer body) body))
+         form (when form (if serialize-form (list 'form-serializer form) form))]
      (cond->
          {:method method
           :url url}
        headers (assoc :headers headers)
        (and query-params (not serialize-query-params)) (assoc :query-params query-params)
-       body (assoc :body (if serialize-body
-                           (list 'body-serializer body)
-                           body))
-       form (assoc :form (if serialize-form
-                           (list 'form-serializer form)
-                           form))))))
+       body (assoc :body body)
+       form (assoc :form form)))))
 
 (comment
   (p/-invoke

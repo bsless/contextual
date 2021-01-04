@@ -27,7 +27,7 @@
       (if (seq bs)
         (let [[[b e] & bs] bs
               sym (gensym (str b "__"))
-              e (walk/postwalk (partial symbol-lookup seen) e)
+              e (walk/preserving-postwalk (partial symbol-lookup seen) e)
               seen (assoc seen b sym)
               ssa (conj ssa (binding-symbol sym) e)
               trace (conj trace seen)]
@@ -43,7 +43,7 @@
 (defn let->ssa
   [[_let bs & body]]
   (let [{:keys [bindings seen]} (bindings->ssa bs)
-        body (walk/postwalk (partial symbol-lookup seen) body)]
+        body (walk/preserving-postwalk (partial symbol-lookup seen) body)]
     (concat (list 'let bindings) body)))
 
 (comment
@@ -57,7 +57,7 @@
 
 (defn ssa-bindings
   [expr]
-  (walk/postwalk
+  (walk/preserving-postwalk
    (fn [expr]
      (cond
        (seq? expr)
@@ -81,7 +81,7 @@
 
 (defn -inline
   [s lookup expr]
-  (walk/postwalk
+  (walk/preserving-postwalk
    (fn [expr]
      (if (= s expr)
        (get lookup s)
