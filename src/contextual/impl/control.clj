@@ -20,26 +20,67 @@
   ([p t e]
    (->If p t e)))
 
-(defrecord Or [a b]
-  p/IContext
-  (-invoke [this ctx]
-    (or
-     (p/-invoke a ctx)
-     (p/-invoke b ctx))))
+
+(defonce ^:private or-builders (atom {}))
+
+(defmacro ^:private def-ors []
+  (let [invoke '-invoke
+        ctx 'ctx
+        name "Or"
+        defs
+        (for [n (range 23)
+              :let [args (map (comp symbol #(str "k" %)) (range n))
+                    rec (symbol (str name n))
+                    constructor (symbol (str "->" rec))
+                    ors (map (fn [arg] `(p/-invoke ~arg ~ctx)) args)
+                    body `(or ~@ors)]]
+          `(do
+             (defrecord ~rec [~@args]
+               p/IContext
+               (~invoke [~'this ~ctx]
+                ~body))
+             (swap! or-builders assoc ~n ~constructor)))]
+    `(do
+       ~@defs)))
+
+(def-ors)
 
 (defn ->or
-  ([])
-  ([a] a)
-  ([a b] (->Or a b)))
+  [& args]
+  (let [n (count args)
+        c (get @or-builders n)]
+    (if c
+      (apply c args)
+      (throw "Too many arguments for or"))))
 
-(defrecord And [a b]
-  p/IContext
-  (-invoke [this ctx]
-    (and
-     (p/-invoke a ctx)
-     (p/-invoke b ctx))))
+(defonce ^:private and-builders (atom {}))
+
+(defmacro ^:private def-ands []
+  (let [invoke '-invoke
+        ctx 'ctx
+        name "And"
+        defs
+        (for [n (range 23)
+              :let [args (map (comp symbol #(str "k" %)) (range n))
+                    rec (symbol (str name n))
+                    constructand (symbol (str "->" rec))
+                    ands (map (fn [arg] `(p/-invoke ~arg ~ctx)) args)
+                    body `(and ~@ands)]]
+          `(do
+             (defrecord ~rec [~@args]
+               p/IContext
+               (~invoke [~'this ~ctx]
+                ~body))
+             (swap! and-builders assoc ~n ~constructand)))]
+    `(do
+       ~@defs)))
+
+(def-ands)
 
 (defn ->and
-  ([])
-  ([a] a)
-  ([a b] (->And a b)))
+  [& args]
+  (let [n (count args)
+        c (get @and-builders n)]
+    (if c
+      (apply c args)
+      (throw "Too many arguments for and"))))
