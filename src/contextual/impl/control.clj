@@ -84,3 +84,79 @@
     (if c
       (apply c args)
       (throw "Too many arguments for and"))))
+
+(defonce ^:private cond-builders (atom {}))
+
+(defmacro ^:private def-conds []
+  (let [invoke '-invoke
+        ctx 'ctx
+        name "Cond"
+        defs
+        (for [n (range 1 13)
+              :let [ks (map (comp symbol #(str "k" %)) (range n))
+                    vs (map (comp symbol #(str "v" %)) (range n))
+                    rec (symbol (str name n))
+                    constructor (symbol (str "->" rec))
+                    args (interleave ks vs)
+                    body `(cond ~@(mapv
+                                   (fn [v]
+                                     `(p/-invoke ~v ~ctx))
+                                   args))]]
+          `(do
+             (defrecord ~rec [~@(interleave ks vs)]
+               p/IContext
+               (~invoke [~'this ~ctx]
+                ~body))
+             (swap! cond-builders assoc ~n ~constructor)))]
+    `(do
+       ~@defs)))
+
+(def-conds)
+
+(defn ->cond
+  [& args]
+  (let [n (quot (count args) 2)
+        c (get @cond-builders n)]
+    (if c
+      (apply c args)
+      (throw "Too many arguments for cond"))))
+
+(defonce ^:private condp-builders (atom {}))
+
+(defmacro ^:private def-condps []
+  (let [invoke '-invoke
+        ctx 'ctx
+        name "Condp"
+        pred 'pred
+        expr 'expr
+        defs
+        (for [n (range 1 13)
+              :let [ks (map (comp symbol #(str "k" %)) (range n))
+                    vs (map (comp symbol #(str "v" %)) (range n))
+                    rec (symbol (str name n))
+                    constructor (symbol (str "->" rec))
+                    args (interleave ks vs)
+                    body `(condp ~pred ~expr
+                            ~@(mapv
+                               (fn [v]
+                                 `(p/-invoke ~v ~ctx))
+                               args))]]
+          `(do
+             (defrecord ~rec [~pred ~expr ~@(interleave ks vs)]
+               p/IContext
+               (~invoke [~'this ~ctx]
+                ~body))
+             (swap! condp-builders assoc ~n ~constructor)))]
+    `(do
+       ~@defs)))
+
+(def-condps)
+
+(defn ->condp
+  [pred expr & args]
+  (let [n (quot (count args) 2)
+        c (get @condp-builders n)]
+    (if c
+      (apply c pred expr args)
+      (throw "Too many arguments for condp"))))
+

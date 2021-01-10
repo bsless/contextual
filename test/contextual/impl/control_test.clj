@@ -21,4 +21,22 @@
                  (sut/->and false 2)
                  1
                  0)
-                nil)))))
+                nil))))
+  (t/testing "Cond"
+    (t/is (= 3
+             (p/-invoke
+              (sut/->cond
+               false 1
+               nil 2
+               true 3
+               true 4)
+              {}))))
+  (t/testing "Condp"
+    (t/is (= 3
+             (p/-invoke
+              (sut/->condp = :c
+               :a 1
+               :b 2
+               :c 3
+               :d 4)
+              {})))))
