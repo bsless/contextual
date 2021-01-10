@@ -136,7 +136,7 @@
                     rec (symbol (str name n))
                     constructor (symbol (str "->" rec))
                     args (interleave ks vs)
-                    body `(condp ~pred ~expr
+                    body `(condp ~pred (p/-invoke ~expr ~ctx)
                             ~@(mapv
                                (fn [v]
                                  `(p/-invoke ~v ~ctx))
