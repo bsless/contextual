@@ -51,7 +51,7 @@
         c (get @or-builders n)]
     (if c
       (apply c args)
-      (throw "Too many arguments for or"))))
+      (throw (new IllegalArgumentException "Too many arguments to or")))))
 
 (defonce ^:private and-builders (atom {}))
 
@@ -83,7 +83,7 @@
         c (get @and-builders n)]
     (if c
       (apply c args)
-      (throw "Too many arguments for and"))))
+      (throw (new IllegalArgumentException "Too many arguments to and")))))
 
 (defonce ^:private cond-builders (atom {}))
 
@@ -119,7 +119,7 @@
         c (get @cond-builders n)]
     (if c
       (apply c args)
-      (throw "Too many arguments for cond"))))
+      (throw (new IllegalArgumentException "Too many arguments to cond")))))
 
 (defonce ^:private condp-builders (atom {}))
 
@@ -158,5 +158,5 @@
         c (get @condp-builders n)]
     (if c
       (apply c pred expr args)
-      (throw "Too many arguments for condp"))))
+      (throw (new IllegalArgumentException "Too many arguments to condp")))))
 
