@@ -78,7 +78,51 @@
                  (merge lookup {'f f}))
                 {})))
       (t/is
-       (= 1 @a)))))
+       (= 1 @a))))
+  (t/testing "cond"
+    (t/testing "constant tests"
+      (t/is
+       (= 2
+          (p/-invoke
+           (sut/-compile
+            '(cond
+               false 1
+               true 2))
+           {}))))
+    (t/testing "expression tests"
+      (t/is
+       (= 2
+          (p/-invoke
+           (sut/-compile
+            '(cond
+               (= 0 1) 1
+               (= 1 1) 2
+               true 3)
+            {'= =})
+           {}))))
+    (t/testing "Expression reference"
+      (t/is
+       (= 2
+          (p/-invoke
+           (sut/-compile
+            '(cond
+               (= (path :x) 0) 1
+               (= (path :x) 1) 2
+               true 3)
+            {'= =})
+           {:x 1})))))
+  (t/testing "condp"
+    (t/testing "Expression reference"
+      (t/is
+       (= 2
+          (p/-invoke
+           (sut/-compile
+            '(condp = (path :x)
+               0 1
+               1 2
+               true 3)
+            {'= =})
+           {:x 1}))))))
 
 (t/deftest path
   (t/testing ""

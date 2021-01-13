@@ -1,7 +1,7 @@
 (ns contextual.impl.compile
   (:require
    [contextual.walk :as walk]
-   [contextual.impl.control :as control :refer [->if ->or ->and]]
+   [contextual.impl.control :as control :refer [->if ->or ->and ->cond ->condp]]
    [contextual.impl.path :as path :refer [->path]]
    [contextual.impl.let :as l :refer [->let]]
    [contextual.impl.string :as s :refer [->str ->join]]
@@ -13,6 +13,8 @@
 (def symbols-registry
   "Assembler special forms which are expanded to specially compiled classes."
   {'if ->if
+   'cond ->cond
+   'condp ->condp
    'or ->or
    'and ->and
    'str ->str
