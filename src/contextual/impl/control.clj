@@ -44,37 +44,29 @@
 
 (def-ors)
 
-(defonce ^:private and-builders (atom {}))
-
 (defmacro ^:private def-ands []
   (let [invoke '-invoke
         ctx 'ctx
         name "And"
         defs
-        (for [n (range 23)
+        (for [n (range 21)
               :let [args (map (comp symbol #(str "k" %)) (range n))
                     rec (symbol (str name n))
                     constructand (symbol (str "->" rec))
                     ands (map (fn [arg] `(p/-invoke ~arg ~ctx)) args)
                     body `(and ~@ands)]]
-          `(do
-             (defrecord ~rec [~@args]
-               p/IContext
-               (~invoke [~'this ~ctx]
-                ~body))
-             (swap! and-builders assoc ~n ~constructand)))]
+          {:rec
+           `(defrecord ~rec [~@args]
+                p/IContext
+                (~invoke [~'this ~ctx]
+                 ~body))
+           :call `([~@args] (~constructand ~@args))})
+        constructor `(defn ~'->and ~@(map :call defs))]
     `(do
-       ~@defs)))
+       ~@(map :rec defs)
+       ~constructor)))
 
 (def-ands)
-
-(defn ->and
-  [& args]
-  (let [n (count args)
-        c (get @and-builders n)]
-    (if c
-      (apply c args)
-      (throw (new IllegalArgumentException "Too many arguments to and")))))
 
 (defonce ^:private cond-builders (atom {}))
 
