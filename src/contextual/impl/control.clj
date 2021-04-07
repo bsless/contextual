@@ -95,8 +95,6 @@
 
 (def-conds)
 
-(defonce ^:private condp-builders (atom {}))
-
 (defmacro ^:private def-condps []
   (let [invoke '-invoke
         ctx 'ctx
@@ -104,7 +102,7 @@
         pred 'pred
         expr 'expr
         defs
-        (for [n (range 1 21)
+        (for [n (range 1 19)
               :let [args (map (comp symbol #(str "x" %)) (range n))
                     rec (symbol (str name n))
                     constructor (symbol (str "->" rec))
@@ -113,22 +111,15 @@
                                (fn [v]
                                  `(p/-invoke ~v ~ctx))
                                args))]]
-          `(do
-             (defrecord ~rec [~pred ~expr ~@args]
-               p/IContext
-               (~invoke [~'this ~ctx]
-                ~body))
-             (swap! condp-builders assoc ~n ~constructor)))]
+          {:rec
+           `(defrecord ~rec [~pred ~expr ~@args]
+              p/IContext
+              (~invoke [~'this ~ctx]
+               ~body))
+           :call `([~pred ~expr ~@args] (~constructor ~pred ~expr ~@args))})]
     `(do
-       ~@defs)))
+       ~@(map :rec defs)
+       (defn ~'->condp ~@(map :call defs)))))
 
 (def-condps)
-
-(defn ->condp
-  [pred expr & args]
-  (let [n (count args)
-        c (get @condp-builders n)]
-    (if c
-      (apply c pred expr args)
-      (throw (new IllegalArgumentException "Too many arguments to condp")))))
 
