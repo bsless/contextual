@@ -122,7 +122,18 @@
                1 2
                true 3)
             {'= =})
-           {:x 1}))))))
+           {:x 1}))))
+    (t/testing "Default case"
+      (t/is
+       (= 3
+          (p/-invoke
+           (sut/-compile
+            '(condp = 2
+               0 1
+               1 2
+               3)
+            {'= =})
+           {}))))))
 
 (t/deftest path
   (t/testing ""

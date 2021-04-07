@@ -130,19 +130,17 @@
         pred 'pred
         expr 'expr
         defs
-        (for [n (range 1 13)
-              :let [ks (map (comp symbol #(str "k" %)) (range n))
-                    vs (map (comp symbol #(str "v" %)) (range n))
+        (for [n (range 1 21)
+              :let [args (map (comp symbol #(str "x" %)) (range n))
                     rec (symbol (str name n))
                     constructor (symbol (str "->" rec))
-                    args (interleave ks vs)
                     body `(condp ~pred (p/-invoke ~expr ~ctx)
                             ~@(mapv
                                (fn [v]
                                  `(p/-invoke ~v ~ctx))
                                args))]]
           `(do
-             (defrecord ~rec [~pred ~expr ~@(interleave ks vs)]
+             (defrecord ~rec [~pred ~expr ~@args]
                p/IContext
                (~invoke [~'this ~ctx]
                 ~body))
@@ -154,7 +152,7 @@
 
 (defn ->condp
   [pred expr & args]
-  (let [n (quot (count args) 2)
+  (let [n (count args)
         c (get @condp-builders n)]
     (if c
       (apply c pred expr args)
