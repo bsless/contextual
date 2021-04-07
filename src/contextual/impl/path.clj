@@ -8,35 +8,24 @@
   (-invoke [this ctx]
     (reduce get ctx ks)))
 
-(defonce ^:private path-builders (atom {}))
-
 (defmacro ^:private def-paths []
   (let [invoke '-invoke
         ctx 'ctx
         name "Path"
         defs
-        (for [n (range 23)
+        (for [n (range 21)
               :let [ks (map (comp symbol #(str "k" %)) (range n))
                     rec (symbol (str name n))
                     constructor (symbol (str "->" rec))
                     body `(-> ~ctx ~@(map (fn [k] `(get ~k)) ks))]]
-          `(do
-             (defrecord ~rec [~@ks]
-               p/IContext
-               (~invoke [~'this ~ctx]
-                ~body))
-             (swap! path-builders assoc ~n ~constructor)))]
+          {:rec
+           `(defrecord ~rec [~@ks]
+              p/IContext
+              (~invoke [~'this ~ctx]
+               ~body))
+           :call `([~@ks] (~constructor ~@(map (fn [k] `(b/unbox ~k)) ks)))})]
     `(do
-       ~@defs)))
+       ~@(map :rec defs)
+       (defn ~'->path ~@(map :call defs)))))
 
 (def-paths)
-
-(defn ->path
-  [& args]
-  (let [n (count args)
-        c (get @path-builders n)
-        args (mapv b/unbox args)]
-    (if c
-      (apply c args)
-      (->Path args))))
-
