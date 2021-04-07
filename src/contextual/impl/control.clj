@@ -68,14 +68,12 @@
 
 (def-ands)
 
-(defonce ^:private cond-builders (atom {}))
-
 (defmacro ^:private def-conds []
   (let [invoke '-invoke
         ctx 'ctx
         name "Cond"
         defs
-        (for [n (range 1 13)
+        (for [n (range 1 11)
               :let [ks (map (comp symbol #(str "k" %)) (range n))
                     vs (map (comp symbol #(str "v" %)) (range n))
                     rec (symbol (str name n))
@@ -85,24 +83,17 @@
                                    (fn [v]
                                      `(p/-invoke ~v ~ctx))
                                    args))]]
-          `(do
-             (defrecord ~rec [~@(interleave ks vs)]
-               p/IContext
-               (~invoke [~'this ~ctx]
-                ~body))
-             (swap! cond-builders assoc ~n ~constructor)))]
+          {:rec
+           `(defrecord ~rec [~@(interleave ks vs)]
+             p/IContext
+             (~invoke [~'this ~ctx]
+              ~body))
+           :call `([~@args] (~constructor ~@args))})]
     `(do
-       ~@defs)))
+       ~@(map :rec defs)
+       (defn ~'->cond ~@(map :call defs)))))
 
 (def-conds)
-
-(defn ->cond
-  [& args]
-  (let [n (quot (count args) 2)
-        c (get @cond-builders n)]
-    (if c
-      (apply c args)
-      (throw (new IllegalArgumentException "Too many arguments to cond")))))
 
 (defonce ^:private condp-builders (atom {}))
 
