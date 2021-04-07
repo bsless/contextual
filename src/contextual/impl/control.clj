@@ -20,38 +20,29 @@
   ([p t e]
    (->If p t e)))
 
-
-(defonce ^:private or-builders (atom {}))
-
 (defmacro ^:private def-ors []
   (let [invoke '-invoke
         ctx 'ctx
         name "Or"
         defs
-        (for [n (range 23)
+        (for [n (range 21)
               :let [args (map (comp symbol #(str "k" %)) (range n))
                     rec (symbol (str name n))
-                    constructor (symbol (str "->" rec))
                     ors (map (fn [arg] `(p/-invoke ~arg ~ctx)) args)
+                    constructor (symbol (str "->" rec))
                     body `(or ~@ors)]]
-          `(do
-             (defrecord ~rec [~@args]
-               p/IContext
-               (~invoke [~'this ~ctx]
-                ~body))
-             (swap! or-builders assoc ~n ~constructor)))]
+          {:rec
+           `(defrecord ~rec [~@args]
+              p/IContext
+              (~invoke [~'this ~ctx]
+               ~body))
+           :call `([~@args] (~constructor ~@args))})
+        constructor `(defn ~'->or ~@(map :call defs))]
     `(do
-       ~@defs)))
+       ~@(map :rec defs)
+       ~constructor)))
 
 (def-ors)
-
-(defn ->or
-  [& args]
-  (let [n (count args)
-        c (get @or-builders n)]
-    (if c
-      (apply c args)
-      (throw (new IllegalArgumentException "Too many arguments to or")))))
 
 (defonce ^:private and-builders (atom {}))
 
