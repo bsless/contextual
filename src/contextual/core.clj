@@ -3,7 +3,8 @@
   (:require
    [contextual.impl.protocols :as p]
    [contextual.impl.compile :as c]
-   [contextual.impl.path :as path]))
+   [contextual.impl.path :as path]
+   [contextual.impl.validate :as v]))
 
 (defn compile
   "Compile an expression into an [[invoke]]able class structure
@@ -35,7 +36,8 @@
     {}
     (comp
      (map ns-publics)
-     cat)
+     cat
+     (map (fn [[k v]] [(v/with-validatation-meta k v) v])))
     namespaces)))
 
 (defn invoke
