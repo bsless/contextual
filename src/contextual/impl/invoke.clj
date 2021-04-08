@@ -7,38 +7,31 @@
   (-invoke [this ctx]
     (apply f (map #(p/-invoke % ctx) args))))
 
-(defonce ^:private fns-builders (atom {}))
-(comment @fns-builders)
-
 (defmacro ^:private def-fns []
   (let [f 'f
         invoke '-invoke
         name "Fn"
         ctx 'ctx
         defs
-        (for [n (range 23)
+        (for [n (range 20)
               :let [args (map (comp symbol #(str "a" %)) (range n))
                     rec (symbol (str name n))
                     constructor (symbol (str "->" rec))
                     body (list* f (map (fn [arg] `(p/-invoke ~arg ~ctx)) args))]]
-          `(do
-             (defrecord ~rec [~f ~@args]
-               p/IContext
-               (~invoke [~'this ~ctx]
-                ~body))
-             (swap! fns-builders assoc ~n ~constructor)))]
+          {:rec
+           `(defrecord ~rec [~f ~@args]
+              p/IContext
+              (~invoke [~'this ~ctx]
+               ~body))
+           :call
+           (if (= n 20)
+             `([~f ~@args] (->Fn* ~f [~@args]))
+             `([~f ~@args] (~constructor ~f ~@args)))})]
     `(do
-       ~@defs)))
+       ~@(map :rec defs)
+       (defn ~'->fn ~@(map :call defs)))))
 
 (def-fns)
-
-(defn ->fn
-  [f & args]
-  (let [n (count args)
-        c (get @fns-builders n)]
-    (if c
-      (apply c f args)
-      (->Fn* f args))))
 
 (comment
   (p/-invoke
