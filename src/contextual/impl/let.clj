@@ -183,14 +183,12 @@
      {}
      bindings)))
 
-(defonce ^:private binding-builders (atom {}))
-
 (defmacro ^:private def-bindings []
   (let [name "Bindings"
         ctx 'ctx
         env 'e
         defs
-        (for [n (range 1 13)
+        (for [n (range 1 11)
               :let [syms (map (comp symbol #(str "sym" %)) (range n))
                     exprs (map (comp symbol #(str "expr" %)) (range n))
                     rec (symbol (str name n))
@@ -200,15 +198,17 @@
                                 (conj bs env `(assoc ~env ~s (p/-invoke ~e (e/with-env ~ctx ~env)))))
                               `[~env {}]
                               (map vector syms exprs))
-                    body `(let [~@bindings] ~env)]]
-          `(do
-             (defrecord ~rec [~@(interleave syms exprs)]
-               p/IContext
-               (-invoke [~'this ~ctx]
+                    body `(let [~@bindings] ~env)
+                    args (interleave syms exprs)]]
+          {:rec
+           `(defrecord ~rec [~@args]
+              p/IContext
+              (-invoke [~'this ~ctx]
                 ~body))
-             (swap! binding-builders assoc ~n ~constructor)))]
+           :call `([~@args] (~constructor ~@args))})]
     `(do
-       ~@defs)))
+       ~@(map :rec defs)
+       (defn ~'->binder ~@(map :call defs)))))
 
 (def-bindings)
 
@@ -219,12 +219,7 @@
 
 (defn ->bindings
   [args]
-  (let [args (unparse-bindings args)
-        n (/ (count args) 2)
-        c (get @binding-builders n)]
-    (if c
-      (apply c args)
-      (->Bindings (into [] (partition-all 2) args)))))
+  (apply ->binder (unparse-bindings args)))
 
 (defrecord Let [bindings expr]
   p/IContext
