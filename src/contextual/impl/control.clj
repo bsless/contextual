@@ -20,79 +20,60 @@
   ([p t e]
    (->If p t e)))
 
-
-(defonce ^:private or-builders (atom {}))
-
 (defmacro ^:private def-ors []
   (let [invoke '-invoke
         ctx 'ctx
         name "Or"
         defs
-        (for [n (range 23)
+        (for [n (range 21)
               :let [args (map (comp symbol #(str "k" %)) (range n))
                     rec (symbol (str name n))
-                    constructor (symbol (str "->" rec))
                     ors (map (fn [arg] `(p/-invoke ~arg ~ctx)) args)
+                    constructor (symbol (str "->" rec))
                     body `(or ~@ors)]]
-          `(do
-             (defrecord ~rec [~@args]
-               p/IContext
-               (~invoke [~'this ~ctx]
-                ~body))
-             (swap! or-builders assoc ~n ~constructor)))]
+          {:rec
+           `(defrecord ~rec [~@args]
+              p/IContext
+              (~invoke [~'this ~ctx]
+               ~body))
+           :call `([~@args] (~constructor ~@args))})
+        constructor `(defn ~'->or ~@(map :call defs))]
     `(do
-       ~@defs)))
+       ~@(map :rec defs)
+       ~constructor)))
 
 (def-ors)
-
-(defn ->or
-  [& args]
-  (let [n (count args)
-        c (get @or-builders n)]
-    (if c
-      (apply c args)
-      (throw (new IllegalArgumentException "Too many arguments to or")))))
-
-(defonce ^:private and-builders (atom {}))
 
 (defmacro ^:private def-ands []
   (let [invoke '-invoke
         ctx 'ctx
         name "And"
         defs
-        (for [n (range 23)
+        (for [n (range 21)
               :let [args (map (comp symbol #(str "k" %)) (range n))
                     rec (symbol (str name n))
                     constructand (symbol (str "->" rec))
                     ands (map (fn [arg] `(p/-invoke ~arg ~ctx)) args)
                     body `(and ~@ands)]]
-          `(do
-             (defrecord ~rec [~@args]
-               p/IContext
-               (~invoke [~'this ~ctx]
-                ~body))
-             (swap! and-builders assoc ~n ~constructand)))]
+          {:rec
+           `(defrecord ~rec [~@args]
+                p/IContext
+                (~invoke [~'this ~ctx]
+                 ~body))
+           :call `([~@args] (~constructand ~@args))})
+        constructor `(defn ~'->and ~@(map :call defs))]
     `(do
-       ~@defs)))
+       ~@(map :rec defs)
+       ~constructor)))
 
 (def-ands)
-
-(defn ->and
-  [& args]
-  (let [n (count args)
-        c (get @and-builders n)]
-    (if c
-      (apply c args)
-      (throw (new IllegalArgumentException "Too many arguments to and")))))
-
-(defonce ^:private cond-builders (atom {}))
 
 (defmacro ^:private def-conds []
   (let [invoke '-invoke
         ctx 'ctx
         name "Cond"
         defs
-        (for [n (range 1 13)
+        (for [n (range 1 11)
               :let [ks (map (comp symbol #(str "k" %)) (range n))
                     vs (map (comp symbol #(str "v" %)) (range n))
                     rec (symbol (str name n))
@@ -102,26 +83,17 @@
                                    (fn [v]
                                      `(p/-invoke ~v ~ctx))
                                    args))]]
-          `(do
-             (defrecord ~rec [~@(interleave ks vs)]
-               p/IContext
-               (~invoke [~'this ~ctx]
-                ~body))
-             (swap! cond-builders assoc ~n ~constructor)))]
+          {:rec
+           `(defrecord ~rec [~@(interleave ks vs)]
+             p/IContext
+             (~invoke [~'this ~ctx]
+              ~body))
+           :call `([~@args] (~constructor ~@args))})]
     `(do
-       ~@defs)))
+       ~@(map :rec defs)
+       (defn ~'->cond ~@(map :call defs)))))
 
 (def-conds)
-
-(defn ->cond
-  [& args]
-  (let [n (quot (count args) 2)
-        c (get @cond-builders n)]
-    (if c
-      (apply c args)
-      (throw (new IllegalArgumentException "Too many arguments to cond")))))
-
-(defonce ^:private condp-builders (atom {}))
 
 (defmacro ^:private def-condps []
   (let [invoke '-invoke
@@ -130,7 +102,7 @@
         pred 'pred
         expr 'expr
         defs
-        (for [n (range 1 21)
+        (for [n (range 1 19)
               :let [args (map (comp symbol #(str "x" %)) (range n))
                     rec (symbol (str name n))
                     constructor (symbol (str "->" rec))
@@ -139,22 +111,15 @@
                                (fn [v]
                                  `(p/-invoke ~v ~ctx))
                                args))]]
-          `(do
-             (defrecord ~rec [~pred ~expr ~@args]
-               p/IContext
-               (~invoke [~'this ~ctx]
-                ~body))
-             (swap! condp-builders assoc ~n ~constructor)))]
+          {:rec
+           `(defrecord ~rec [~pred ~expr ~@args]
+              p/IContext
+              (~invoke [~'this ~ctx]
+               ~body))
+           :call `([~pred ~expr ~@args] (~constructor ~pred ~expr ~@args))})]
     `(do
-       ~@defs)))
+       ~@(map :rec defs)
+       (defn ~'->condp ~@(map :call defs)))))
 
 (def-condps)
-
-(defn ->condp
-  [pred expr & args]
-  (let [n (count args)
-        c (get @condp-builders n)]
-    (if c
-      (apply c pred expr args)
-      (throw (new IllegalArgumentException "Too many arguments to condp")))))
 
