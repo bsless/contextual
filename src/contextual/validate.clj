@@ -1,25 +1,18 @@
 (ns contextual.validate
   (:require
    [contextual.impl.compile :as c]
-   [contextual.impl.utils :as u]))
+   [contextual.impl.validate :as v]))
 
-(defn- find-symbols
-  "Find all symbols in `expr`"
-  [expr]
-  (cond
-    (symbol? expr) expr
-    (coll? expr) (->Eduction
-                  (comp
-                   (map find-symbols)
-                   u/maybe-cat
-                   (remove nil?))
-                  expr)
-    :else nil))
-
-(defn unresolvable-symbols
-  "Find all symbols in `expr` which cannot be resolved"
+(defn validate-expression
   [expr lookup registry]
-  (into
-   []
-   (remove (some-fn lookup registry c/symbols-registry))
-   (find-symbols expr)))
+  (let [reg (merge c/symbols-registry registry)
+        unresolvable-symbols (v/unresolvable-symbols
+                              expr
+                              lookup
+                              (merge c/symbols-registry registry))
+        bad-calls (v/bad-calls expr (merge reg lookup))]
+    (cond-> {}
+      (seq unresolvable-symbols)
+      (assoc :unresolvable-symbols unresolvable-symbols)
+      (seq bad-calls)
+      (assoc :bad-function-calls bad-calls))))
