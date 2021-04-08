@@ -29,17 +29,13 @@
 
 (defn namespaces->lookup
   "Take a coll of namespaces and return a map of all their publicly
-  defined symbols to their corresponding vars by way of [[ns-publics]].
-  To deref the vars, pass the optional arg `deref?` a truthy value."
+  defined symbols to their corresponding vars by way of [[ns-publics]]."
   ([namespaces]
-   (namespaces->lookup false namespaces))
-  ([namespaces deref?]
    (into
     {}
     (comp
      (map ns-publics)
-     cat
-     (if deref? (map (fn [[k v]] [k (deref v)])) identity))
+     cat)
     namespaces)))
 
 (defn invoke
