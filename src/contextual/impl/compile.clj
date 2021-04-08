@@ -50,7 +50,8 @@
   (fn [expr]
     (cond
       (seq? expr)
-      (let [[f & args] expr]
+      (let [[f & args] expr
+            f (if (var? f) @f f)]
         (walk/preserving-meta
          expr
          (if-let [f' (registry f)]
