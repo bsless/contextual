@@ -29,7 +29,7 @@
   (when-let [arglists (:arglists (meta v))]
     (let [arglists (into [] (sort-by count arglists))
           biggest (peek arglists)
-          restargs? (= '& (peek (pop biggest)))]
+          restargs? (and (> (count biggest) 1) (= '& (peek (pop biggest))))]
       (if restargs?
         (let [allowed (into #{} (map count) (pop arglists))
               restargs (dec (count biggest))]
