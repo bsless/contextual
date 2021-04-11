@@ -1,27 +1,54 @@
-(ns contextual.impl.validate
-  (:require
-   [contextual.impl.utils :as u]))
+(ns contextual.impl.validate)
 
-(defn- find-symbols
-  "Find all symbols in `expr`"
-  [expr]
-  (cond
-    (symbol? expr) expr
-    (coll? expr) (->Eduction
-                  (comp
-                   (map find-symbols)
-                   u/maybe-cat
-                   (remove nil?))
-                  expr)
-    :else nil))
+(defn missing-symbols
+  ([expr context]
+   (missing-symbols expr context #{}))
+  ([expr context found]
+   (cond
+     (symbol? expr)
+     (if (contains? context expr)
+       found
+       (conj found expr))
+
+     (list? expr)
+     (let [[h & t] expr]
+       (if (= 'let h)
+         (let [[bindv & body] t
+               bindv (partition 2 bindv)]
+           (loop [bindv bindv
+                  context context
+                  found found]
+             (if (seq bindv)
+               (let [[[sym expr]] bindv
+                     context (assoc context sym sym)]
+                 (recur (rest bindv) context (missing-symbols expr context found)))
+               (missing-symbols body context found))))
+         (reduce
+          (fn [found expr]
+            (missing-symbols expr context found))
+          found
+          expr)))
+
+     (map? expr)
+     (reduce
+      (fn [found expr]
+        (missing-symbols expr context found))
+      found
+      (mapcat identity expr))
+
+     (coll? expr)
+     (reduce
+      (fn [found expr]
+        (missing-symbols expr context found))
+      found
+      expr)
+
+     :else found)))
 
 (defn unresolvable-symbols
   "Find all symbols in `expr` which cannot be resolved"
   [expr lookup registry]
-  (into
-   []
-   (remove (some-fn lookup registry))
-   (find-symbols expr)))
+  (missing-symbols expr (merge registry lookup)))
 
 (defn arity-check-fn
   "Derive a function to validate the arity of an expression based on a var's metadata"
