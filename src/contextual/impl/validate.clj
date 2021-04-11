@@ -103,12 +103,16 @@
              [s _] (find m sym)
              f (:validate-arity (meta s))
              n (count args)]
-         (cond-> failures
-           (and f (not (f n)))
-           (conj {:name sym :cause (str "Wrong number of arguments: " n)})
-           (and f (not (callable? f)))
-           (conj {:name sym :cause "Not a function"})
-           (nil? f) (conj {:name sym :cause "Does not exist!"}))))
+         (if (nil? f)
+           (conj failures
+                 (if (symbol? sym)
+                   {:name sym :cause "Does not exist!"}
+                   {:name sym :cause (str sym " is not a function")}))
+           (cond-> failures
+             (not (f n))
+             (conj {:name sym :cause (str "Wrong number of arguments: " n)})
+             (not (callable? f))
+             (conj {:name sym :cause "Not a function"})))))
      []
      calls)))
 
