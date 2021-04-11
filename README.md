@@ -227,7 +227,7 @@ Experimental, in development
 - [X] Bring HTTP request builder up to workable condition.
 - [ ] Handle different types of expressions in request better (vector, expr, etc.)
 - [X] Faster walk?
-- [ ] More macros, (cond!)
+- [X] More macros, (cond!)
 - [X] Improve / control over resolution mechanism
 - [X] Expose only safe functions by default (nothing is exposed by default)
 - [ ] add namespaces
