@@ -7,22 +7,24 @@
    [contextual.impl.string :as s :refer [->str ->join]]
    [contextual.impl.invoke :as i]
    [contextual.impl.box :as b]
+   [contextual.impl.validate :as v]
    [contextual.impl.collections :as c]
    [contextual.impl.protocols :as p]))
 
 (def symbols-registry
   "Assembler special forms which are expanded to specially compiled classes."
-  {'if ->if
-   'cond ->cond
-   'condp ->condp
-   'or ->or
-   'and ->and
-   'str ->str
-   'join ->join
-   'path ->path
-   'let ->let
-   '->hashmap c/->map
-   '->vec c/->vector})
+  (v/enrich-lookup-map
+   {'if #'->if
+    'cond #'->cond
+    'condp #'->condp
+    'or #'->or
+    'and #'->and
+    'str #'->str
+    'join #'->join
+    'path #'->path
+    'let #'->let
+    '->hashmap #'c/->map
+    '->vec #'c/->vector}))
 
 (defn flatten-strings
   [expr]
@@ -50,7 +52,8 @@
   (fn [expr]
     (cond
       (seq? expr)
-      (let [[f & args] expr]
+      (let [[f & args] expr
+            f (if (var? f) @f f)]
         (walk/preserving-meta
          expr
          (if-let [f' (registry f)]

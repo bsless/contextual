@@ -1,10 +1,10 @@
 (ns contextual.core
   (:refer-clojure :exclude [compile])
   (:require
-   [contextual.impl.utils :as u]
    [contextual.impl.protocols :as p]
    [contextual.impl.compile :as c]
-   [contextual.impl.path :as path]))
+   [contextual.impl.path :as path]
+   [contextual.impl.validate :as v]))
 
 (defn compile
   "Compile an expression into an [[invoke]]able class structure
@@ -30,40 +30,16 @@
 
 (defn namespaces->lookup
   "Take a coll of namespaces and return a map of all their publicly
-  defined symbols to their corresponding vars by way of [[ns-publics]].
-  To deref the vars, pass the optional arg `deref?` a truthy value."
+  defined symbols to their corresponding vars by way of [[ns-publics]]."
   ([namespaces]
-   (namespaces->lookup false namespaces))
-  ([namespaces deref?]
    (into
     {}
     (comp
      (map ns-publics)
      cat
-     (if deref? (map (fn [[k v]] [k (deref v)])) identity))
+     (map (fn [[k v]] [(v/with-validatation-meta k v) v])))
     namespaces)))
 
 (defn invoke
   [expr context]
   (p/-invoke expr context))
-
-(defn- find-symbols
-  "Find all symbols in `expr`"
-  [expr]
-  (cond
-    (symbol? expr) expr
-    (coll? expr) (->Eduction
-                  (comp
-                   (map find-symbols)
-                   u/maybe-cat
-                   (remove nil?))
-                  expr)
-    :else nil))
-
-(defn unresolvable-symbols
-  "Find all symbols in `expr` which cannot be resolved"
-  [expr lookup registry]
-  (into
-   []
-   (remove (some-fn lookup registry c/symbols-registry))
-   (find-symbols expr)))
