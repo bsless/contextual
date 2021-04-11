@@ -88,6 +88,18 @@ Special HTTP options:
 - `serialize-query-params`: when truth-y will append the query params to
   the end of the URL instead of emitting them as a map. i.e. `{:a 1 :b 2}` -> `?a=1&b=2`.
 
+## Validation
+
+The templating system can perform best-effort validation.
+
+Use `contextual.validate/validate-expression`, which will report the following validations in a map:
+
+- `unresolvable-symbols`: All the symbols which could not be resolved at
+  expression compile time.
+- `bad-function-calls`: All instances of expressions with a wrong number
+  of arguments, function calls which aren't callable, and unresolved
+  symbols. This overlaps slightly with `unresolvable-symbols`.
+
 ## Design
 
 ### Protocols
