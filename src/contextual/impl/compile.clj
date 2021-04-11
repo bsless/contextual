@@ -47,19 +47,22 @@
    (and (l/binding-symbol? s) s)
    (get lookup s (l/->lookup s))))
 
+(defn- unvar
+  [v]
+  (if (var? v) @v v))
+
 (defn- assembly-fn
   [registry lookup]
   (fn [expr]
     (cond
       (seq? expr)
-      (let [[f & args] expr
-            f (if (var? f) @f f)]
+      (let [[f & args] expr]
         (walk/preserving-meta
          expr
-         (if-let [f' (registry f)]
+         (if-let [f' (unvar (registry f))]
            (apply f' args)
            (apply i/->fn f args))))
-      (symbol? expr) (expand-symbol registry lookup expr)
+      (symbol? expr) (unvar (expand-symbol registry lookup expr))
       (instance? clojure.lang.MapEntry expr) expr
       (map? expr) ((registry '->hashmap) expr)
       (vector? expr) ((registry '->vec) expr)
