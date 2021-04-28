@@ -40,6 +40,11 @@
      (map (fn [[k v]] [(v/with-validatation-meta k v) v])))
     namespaces)))
 
+(defn annotate-lookup
+  "Annotate symbols in lookup with validation metadata"
+  [m]
+  (v/enrich-lookup-map m))
+
 (defn invoke
   [expr context]
   (p/-invoke expr context))
