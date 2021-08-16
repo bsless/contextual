@@ -45,7 +45,7 @@
   (or
    (and (registry s) s)
    (and (l/binding-symbol? s) s)
-   (get lookup s (l/->lookup s))))
+   (walk/preserving-meta s (get lookup s (l/->lookup s)))))
 
 (defn- unvar
   [v]
