@@ -276,3 +276,19 @@
             {:serialize-form true
              :form-serializer pr-str})
            {}))))))
+
+(t/deftest optional-attribute-15
+  (let [template '{:url "http://www.url.com",
+                   :body {:ip ^:optional ip}}
+        lookup {'ip (contextual.core/path :ip)}
+        compiled (sut/compile-request template lookup)]
+    (t/testing "Optional value exists"
+      (t/is (= {:url "http://www.url.com"
+                :body {:ip "1.2.3.4"}
+                :method "GET"}
+               (invoke compiled {:ip "1.2.3.4"}))))
+    (t/testing "Optional value is missing"
+      (t/is (= {:url "http://www.url.com"
+                :body {}
+                :method "GET"}
+               (invoke compiled {}))))))
