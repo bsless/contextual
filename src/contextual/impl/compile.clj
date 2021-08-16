@@ -45,7 +45,7 @@
   (or
    (and (registry s) s)
    (and (l/binding-symbol? s) s)
-   (walk/preserving-meta s (get lookup s (l/->lookup s)))))
+   (get lookup s (l/->lookup s))))
 
 (defn- unvar
   [v]
@@ -62,7 +62,7 @@
          (if-let [f' (unvar (registry f))]
            (apply f' args)
            (apply i/->fn f args))))
-      (symbol? expr) (unvar (expand-symbol registry lookup expr))
+      (symbol? expr) (walk/preserving-meta (unvar (expand-symbol registry lookup expr)) expr)
       (instance? clojure.lang.MapEntry expr) expr
       (map? expr) ((registry '->hashmap) expr)
       (vector? expr) ((registry '->vec) expr)
