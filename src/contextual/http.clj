@@ -4,7 +4,7 @@
    [contextual.impl.protocols :as p]
    [contextual.impl.path :refer [->path]]
    [contextual.impl.string :refer [compress-string-xf strexpr?]]
-   [contextual.impl.compile :refer [-compile]]
+   [contextual.impl.compile :refer [-compile symbols-registry]]
    [contextual.impl.collections :refer [->map]]
    [contextual.impl.http :refer [->kv ->query-params]]
    [contextual.impl.collections :as c])
@@ -284,4 +284,4 @@
      (-compile-request
       (request req opts)
       lookup
-      (merge http-symbols-registry registry)))))
+      (merge symbols-registry http-symbols-registry registry)))))
