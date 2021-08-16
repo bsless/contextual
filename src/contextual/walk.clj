@@ -72,7 +72,12 @@
 (defn preserving-meta
   [o o']
   (if (meta? o')
-    (with-meta o' (merge (maybe-meta o) (maybe-meta o')))
+    (let [m (maybe-meta o)
+          m' (meta o')]
+      (cond
+        (and m m') (with-meta o' (merge m m'))
+        m (with-meta o' m)
+        :else o'))
     o'))
 
 (defn preserving-walk
