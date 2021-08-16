@@ -62,7 +62,7 @@
          (if-let [f' (unvar (registry f))]
            (apply f' args)
            (apply i/->fn f args))))
-      (symbol? expr) (walk/preserving-meta (unvar (expand-symbol registry lookup expr)) expr)
+      (symbol? expr) (walk/preserving-meta expr (unvar (expand-symbol registry lookup expr)))
       (instance? clojure.lang.MapEntry expr) expr
       (map? expr) ((registry '->hashmap) expr)
       (vector? expr) ((registry '->vec) expr)
