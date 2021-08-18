@@ -22,7 +22,6 @@
   (some-fn
    string?
    keyword?
-   symbol?
    number?
    nil?
    boolean?
