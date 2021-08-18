@@ -50,8 +50,8 @@
       (fn [m k v]
         (if-some [v (p/-invoke v ctx)]
           (assoc! m (p/-invoke k ctx) v)
-          v))
-      (transient base)
+          m))
+      (transient (p/-invoke base ctx))
       m))))
 
 (defonce ^:private opt-map-wrapper-builders (atom {}))
@@ -103,7 +103,7 @@
         c (get @opt-map-wrapper-builders (count optional))]
     (if c
       (apply c base (mapcat identity optional))
-      (->OptionalMapWrapper base optional))))
+      (->OptionalMapWrapper base (into {} optional)))))
 
 (defn ->maybe-map
   [m]

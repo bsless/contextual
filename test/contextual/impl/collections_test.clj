@@ -118,4 +118,12 @@
             '{:a 1 :b ^:optional (path :x)}
             {}
             {'->hashmap sut/->maybe-map})
-           {})))))))
+           {}))))
+      (t/testing "rest-optional map args"
+        (let [cs (map str (map char (range (int \a) (int \z))))
+              m (zipmap (map keyword cs) (map (fn [s] (with-meta (list 'path (keyword s)) {:optional true})) cs))
+              m (assoc m :required "really")
+              compiled (c/compile m {} {'->hashmap sut/->maybe-map})]
+          (t/is
+           (= {:required "really"}
+              (c/invoke compiled {}))))))))
