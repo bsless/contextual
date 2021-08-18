@@ -292,3 +292,12 @@
                 :body {}
                 :method "GET"}
                (invoke compiled {}))))))
+
+(t/deftest query-string-serialization-17
+  (let [template '{:url "http://www.query-params-issue.com" :query-params {:ip ip}}
+        lookup {'ip (contextual.core/path :ip)}
+        compiled (sut/compile-request template lookup {} {:serialize-query-params true})]
+    (t/is
+     (=
+      {:method "GET", :url "http://www.query-params-issue.com?ip=127.0.0.1"}
+      (contextual.core/invoke compiled {:ip "127.0.0.1"})))))
