@@ -40,7 +40,7 @@
 
     (t/testing "Expression"
       (t/is
-       (= '{:url (str (str "https://" (path :foo) ".bar.com") "/" (path :bar))
+       (= '{:url (str (str "https://" (path :foo) ".bar.com") "/" (url-encode (path :bar)))
             :method "GET"}
           (sut/request '{:url (str "https://" (path :foo) ".bar.com")
                          :path [(path :bar)]}
@@ -48,7 +48,7 @@
 
     (t/testing "Vector"
       (t/is
-       (= '{:url (str (str "https://hello." (path :foo) ".bar.com") "/" (str "fizz/" (path :buzz)))
+       (= '{:url (str (str "https://hello." (path :foo) ".bar.com") "/" (str "fizz/" (url-encode (path :buzz))))
             :method "GET"}
           (sut/request '{:url ["https://hello" (path :foo) "bar.com"]
                          :path ["fizz" (path :buzz)]}
@@ -345,3 +345,39 @@
      (=
       {:method "GET", :url "http://www.query-params-issue.com?ip=127.0.0.1"}
       (contextual.core/invoke compiled {:ip "127.0.0.1"})))))
+
+(t/deftest encoding
+
+  (t/testing "Path"
+    (t/is
+     (= {:url (str "https://bar.com/fi%20zz/hello%20world")
+         :method "GET"}
+        (invoke
+         (sut/compile-request
+          '{:url (str "https://bar.com")
+            :path [(path :foo) (path :bar)]}
+          {})
+         {:foo "fi zz"
+          :bar "hello world"}))))
+
+  (t/testing "Query params"
+    (t/testing "Serialized"
+      (t/is
+       (= {:url "https://foo.bar.com?a=1&b%20B=B%20b&c=x%20X&d%20D=y%20Y&e%20E=z"
+           :method "GET"}
+          (invoke
+           (sut/compile-request
+            '{:url "https://foo.bar.com"
+              :query-params {:a 1
+                             "b B" "B b"
+                             :c (path :x)
+                             (path :d) (path :y)
+                             (path :e) "z"
+                             }}
+            {}
+            {}
+            {:serialize-query-params true})
+           {:x "x X"
+            :d "d D"
+            :y "y Y"
+            :e "e E"}))))))

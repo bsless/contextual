@@ -13,7 +13,10 @@
 
 (defn ^String url-encode
   [s]
-  (URLEncoder/encode (str s) "utf8"))
+  (.replace (URLEncoder/encode (str s) "utf8") "+" "%20"))
+
+(comment
+  (url-encode (url-encode "foo bar")))
 
 (def ^:const path-sep "/")
 (def ^:const url-sep ".")
@@ -28,28 +31,38 @@
    ))
 
 (defn- emit-scalar
-  [k]
-  (cond
-    (or (keyword? k) (symbol? k)) (name k)
-    :else k))
+  ([k]
+   (emit-scalar k false))
+  ([k encode?]
+   (cond->
+       (cond
+         (or (keyword? k) (symbol? k)) (name k)
+         :else k)
+     encode? url-encode)))
 
 (defn- emit-kv-pair
-  [k v]
-  (when k
-    (cond
-      (and (scalar? k) (scalar? v)) (str (emit-scalar k) "=" (emit-scalar v) "&")
-      (scalar? k) (list 'str (emit-scalar k) "=" v "&")
-      (some? k) `(~'kv ~k ~v))))
+  ([k v]
+   (emit-kv-pair k v false))
+  ([k v encode?]
+   (when k
+     (cond
+       (and (scalar? k) (scalar? v)) (str (emit-scalar k encode?) "=" (emit-scalar v encode?) "&")
+       (scalar? k) (list 'str (emit-scalar k encode?) "=" (if encode? (list 'url-encode v) v) "&")
+       (some? k) (if encode?
+                   `(~'kv (~'url-encode ~k) (~'url-encode ~v))
+                   `(~'kv ~k ~v))))))
 
 (defn qs->ir
-  [m]
-  (let [parts (into
-               []
-               (comp
-                (map (fn [[k v]] (emit-kv-pair k v)))
-                compress-string-xf)
-               m)]
-    `(~'str ~@(conj parts '__qs-trim))))
+  ([m]
+   (qs->ir m false))
+  ([m encode?]
+   (let [parts (into
+                []
+                (comp
+                 (map (fn [[k v]] (emit-kv-pair k v encode?)))
+                 compress-string-xf)
+                m)]
+     `(~'str ~@(conj parts '__qs-trim)))))
 
 (comment
   (def ir (qs->ir
@@ -71,11 +84,19 @@
   ([path]
    (path->ir path path-sep))
   ([path sep]
+   (path->ir path sep false))
+  ([path sep encode?]
    (cond
      (string? path) path
      (strexpr? path) path
-     :else (let [path (interpose sep path)
-                 path (transduce compress-string-xf conj [] path)]
+     :else (let [path (transduce (comp (if encode?
+                                      (map (fn [part]
+                                             (if (scalar? part)
+                                               (emit-scalar part true)
+                                               `(~'url-encode ~part))))
+                                      identity)
+                                    (interpose sep)
+                                    compress-string-xf) conj [] path)]
              (if (= 1 (count path)) (first path)
                  (list* 'str path))))))
 
@@ -98,8 +119,8 @@
             serialize-form]}]
    (let [url (cond->
                  (path->ir url url-sep)
-               path (as-> $ `(~'str ~$ "/" ~(path->ir path)))
-               serialize-query-params (as-> $ `(~'str ~$ "?" ~(qs->ir query-params))))
+               path (as-> $ `(~'str ~$ "/" ~(path->ir path path-sep true)))
+               serialize-query-params (as-> $ `(~'str ~$ "?" ~(qs->ir query-params serialize-query-params))))
          body (when body (if serialize-body (list 'body-serializer body) body))
          form (when form (if serialize-form (list 'form-serializer form) form))]
      (cond->
@@ -282,5 +303,5 @@
                  (when serialize-form {'form-serializer form-serializer}))]
      (-compile-request
       (request req opts)
-      lookup
+      (assoc lookup 'url-encode #'url-encode)
       (merge symbols-registry http-symbols-registry registry)))))
