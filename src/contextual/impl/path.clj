@@ -29,3 +29,51 @@
        (defn ~'->path ~@(map :call defs)))))
 
 (def-paths)
+
+
+(defmacro ^:private def-multi-paths []
+  (let [invoke '-invoke
+        ctx 'ctx
+        name "MultiPath"
+        defs
+        (for [n (range 1 9)
+              :let [ps (map (comp symbol #(str "p" %)) (range n))
+                    rec (symbol (str name n))
+                    constructor (symbol (str "->" rec))
+                    body `(or ~@(map (fn [p] `(p/-invoke ~p ~ctx)) ps))]]
+          {:rec
+           `(defrecord ~rec [~@ps]
+              p/IContext
+              (~invoke [~'this ~ctx]
+               ~body))
+           :call `([~@ps] (~constructor ~@(map (fn [k] `(apply ~'->path (b/unbox ~k))) ps)))})]
+    `(do
+       ~@(map :rec defs)
+       (defn ~'->multi-path ~@(map :call defs)))))
+
+(def-multi-paths)
+
+(defmacro ^:private def-predicative-multi-paths []
+  (let [invoke '-invoke
+        ctx 'ctx
+        name "PredicativeMultiPath"
+        pred 'pred
+        defs
+        (for [n (range 1 9)
+              :let [ps (map (comp symbol #(str "p" %)) (range n))
+                    rec (symbol (str name n))
+                    constructor (symbol (str "->" rec))
+                    body `(or ~@(map (fn [p] `(let [~'ret (p/-invoke ~p ~ctx)]
+                                               (if (~pred ~'ret)
+                                                 ~'ret))) ps))]]
+          {:rec
+           `(defrecord ~rec [~pred ~@ps]
+              p/IContext
+              (~invoke [~'this ~ctx]
+               ~body))
+           :call `([~pred ~@ps] (~constructor ~pred ~@(map (fn [k] `(apply ~'->path (b/unbox ~k))) ps)))})]
+    `(do
+       ~@(map :rec defs)
+       (defn ~'->pred-multi-path ~@(map :call defs)))))
+
+(def-predicative-multi-paths)

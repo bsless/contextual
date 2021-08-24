@@ -28,6 +28,14 @@
   [& args]
   (apply path/->path args))
 
+(defn multi-path
+  [& args]
+  (apply path/->multi-path args))
+
+(defn pred-multi-path
+  [pred & args]
+  (apply path/->pred-multi-path pred args))
+
 (defn namespaces->lookup
   "Take a coll of namespaces and return a map of all their publicly
   defined symbols to their corresponding vars by way of [[ns-publics]]."

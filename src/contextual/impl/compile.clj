@@ -2,7 +2,7 @@
   (:require
    [contextual.walk :as walk]
    [contextual.impl.control :as control :refer [->if ->or ->and ->cond ->condp]]
-   [contextual.impl.path :as path :refer [->path]]
+   [contextual.impl.path :as path :refer [->path ->multi-path ->pred-multi-path]]
    [contextual.impl.let :as l :refer [->let]]
    [contextual.impl.string :as s :refer [->str ->join]]
    [contextual.impl.invoke :as i]
@@ -22,6 +22,8 @@
     'str #'->str
     'join #'->join
     'path #'->path
+    'multi-path #'->multi-path
+    'pred-multi-path #'->pred-multi-path
     'let #'->let
     '->hashmap #'c/->map
     '->vec #'c/->vector}))
