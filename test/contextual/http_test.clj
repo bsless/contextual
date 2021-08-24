@@ -2,7 +2,8 @@
   (:require
    [contextual.core :refer [invoke]]
    [contextual.http :as sut]
-   [clojure.test :as t]))
+   [clojure.test :as t]
+   [clojure.string :as str]))
 
 (t/deftest request
 
@@ -141,6 +142,49 @@
             '{:url ["https://hello" (path :foo) "bar.com"]}
             {})
            {:foo "foo"})))))
+
+  (t/testing "Multi Path"
+    (t/testing "first option taken"
+      (t/is
+       (= {:url "https://hello.fizz.bar.com"
+           :method "GET"}
+          (invoke
+           (sut/compile-request
+            '{:url ["https://hello" (multi-path [:foo :bar] [:fizz :buzz]) "bar.com"]}
+            {})
+           {:foo {:bar "fizz"}
+            :fizz {:buzz "else"}}))))
+    (t/testing "second option taken"
+      (t/is
+       (= {:url "https://hello.else.bar.com"
+           :method "GET"}
+          (invoke
+           (sut/compile-request
+            '{:url ["https://hello" (multi-path [:foo :bar] [:fizz :buzz]) "bar.com"]}
+            {})
+           {:fizz {:buzz "else"}})))))
+
+  (t/testing "Predicative Multi Path"
+    (t/testing "first option taken"
+      (t/is
+       (= {:url "https://hello.fizz.bar.com"
+           :method "GET"}
+          (invoke
+           (sut/compile-request
+            '{:url ["https://hello" (pred-multi-path not-blank [:foo :bar] [:fizz :buzz]) "bar.com"]}
+            {'not-blank (complement str/blank?)})
+           {:foo {:bar "fizz"}
+            :fizz {:buzz "else"}}))))
+    (t/testing "second option taken"
+      (t/is
+       (= {:url "https://hello.else.bar.com"
+           :method "GET"}
+          (invoke
+           (sut/compile-request
+            '{:url ["https://hello" (pred-multi-path not-blank [:foo :bar] [:fizz :buzz]) "bar.com"]}
+            {'not-blank (complement str/blank?)})
+           {:foo {:bar ""}
+            :fizz {:buzz "else"}})))))
 
   (t/testing "Path compiler"
     (t/testing "Simple"
