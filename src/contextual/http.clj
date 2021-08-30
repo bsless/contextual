@@ -5,9 +5,9 @@
    [contextual.impl.path :refer [->path]]
    [contextual.impl.string :refer [compress-string-xf strexpr?]]
    [contextual.impl.compile :refer [-compile symbols-registry]]
-   [contextual.impl.collections :refer [->map]]
-   [contextual.impl.http :refer [->kv ->query-params]]
-   [contextual.impl.collections :as c])
+   [contextual.impl.collections :refer [->map ->maybe-map]]
+   [contextual.impl.http :refer [->kv ->okv ->query-params]]
+   [contextual.walk :as w])
   (:import
    [java.net URLEncoder]))
 
@@ -40,17 +40,33 @@
          :else k)
      encode? url-encode)))
 
+(defn optional? [v] (boolean (:optional (w/maybe-meta v))))
+
 (defn- emit-kv-pair
   ([k v]
    (emit-kv-pair k v false))
   ([k v encode?]
    (when k
      (cond
-       (and (scalar? k) (scalar? v)) (str (emit-scalar k encode?) "=" (emit-scalar v encode?) "&")
-       (scalar? k) (list 'str (emit-scalar k encode?) "=" (if encode? (list 'url-encode v) v) "&")
-       (some? k) (if encode?
-                   `(~'kv (~'url-encode ~k) (~'url-encode ~v))
-                   `(~'kv ~k ~v))))))
+
+       (and (scalar? k) (scalar? v))
+       (str (emit-scalar k encode?) "=" (emit-scalar v encode?) "&")
+
+       (scalar? v) ;; then k is definitely not a scalar
+       (let [v (emit-scalar v encode?)
+             k (if encode? `(~'url-encode ~k) k)]
+         `(~'kv ~k ~v))
+
+       (optional? v)
+       (let [k (if (scalar? k) (emit-scalar k encode?) (if encode? `(~'url-encode ~k) k))]
+         `(~'okv ~k ~v)) ;; optional KV container
+
+       :else
+       (if (scalar? k)
+         (list 'str (emit-scalar k encode?) "=" (if encode? (list 'url-encode v) v) "&")
+         (if encode?
+           `(~'kv (~'url-encode ~k) (~'url-encode ~v))
+           `(~'kv ~k ~v)))))))
 
 (defn qs->ir
   ([m]
@@ -107,8 +123,9 @@
 
 (def http-symbols-registry
   {'kv ->kv
+   'okv ->okv
    '-map ->map
-   '->hashmap c/->maybe-map
+   '->hashmap ->maybe-map
    'query-params ->query-params})
 
 (defn request
