@@ -172,45 +172,34 @@ Otherwise, a symbol will be interpreted as an environment lookup.
 
 ## Performance vs. SCI
 
-Since contextual's model is compile-once run-many, invoke is
-significantly faster than sci's eval:
+Contextual optimizes for evaluation and string generation, being a template engine.
 
-```clojure
-(require '[sci.core :as sci])
+SCI's analysis is faster than Contextual which has several optimization passes.
 
-(def scitx (sci/init {}))
+Besides let forms, Contextual's evaluation is faster.
 
-(sci/eval-form scitx '(let [x 1 y 2] (+ x y)))
+### Analysis
 
-(def c (-compile '(let [x 1 y 2] (+ x y))))
+| Expression                      | SCI                   | Contextual            |
+| (+ 1 2)                         | 964.928006158732 ns   | 2.079940179533958 µs  |
+| (let [x 1 y 2] (+ x y))         | 4.053300853147959 µs  | 10.428633451833264 µs |
+| (let [x 1] (let [y 2] (+ x y))) | 5.014739082063033 µs  | 15.419620810055868 µs |
+| (str 1)                         | 940.5541048261234 ns  | 2.462470343113364 µs  |
+| (str 1 2 3)                     | 978.0085949105783 ns  | 3.3992453241441143 µs |
+| (str 1 2 3 4 5 6 7 8 9 10)      | 1.1567249302535807 µs | 6.230790269538975 µs  |
+| (str 1 (str 2 (str 3)))         | 2.7034542882428667 µs | 6.367253313202483 µs  |
 
-(-invoke c {})
+### Evaluation of analyzed expression
 
-(require '[criterium.core :as cc])
+| Expression                      | SCI                   | Contextual            |
+| (+ 1 2)                         | 35.082971812986024 ns | 8.572977104636808 ns  |
+| (let [x 1 y 2] (+ x y))         | 296.1578519129252 ns  | 239.01144451640243 ns |
+| (let [x 1] (let [y 2] (+ x y))) | 448.73383802345813 ns | 503.64078619481376 ns |
+| (str 1)                         | 25.416337334204073 ns | 19.849291428915592 ns |
+| (str 1 2 3)                     | 117.64023555640503 ns | 45.32831079503547 ns  |
+| (str 1 2 3 4 5 6 7 8 9 10)      | 409.09662405378765 ns | 124.85953596525712 ns |
+| (str 1 (str 2 (str 3)))         | 187.72209701166938 ns | 50.720662555853266 ns |
 
-(cc/quick-bench
- (sci/eval-form scitx '(let [x 1 y 2] (+ x y))))
-
-;;; Evaluation count : 20016 in 6 samples of 3336 calls.
-;;;              Execution time mean : 31.412883 µs
-;;;     Execution time std-deviation : 1.088819 µs
-;;;    Execution time lower quantile : 30.478367 µs ( 2.5%)
-;;;    Execution time upper quantile : 33.040048 µs (97.5%)
-;;;                    Overhead used : 9.329803 ns
-
-(cc/quick-bench
- (-invoke c {}))
-
-;;; Evaluation count : 543534 in 6 samples of 90589 calls.
-;;;              Execution time mean : 1.118617 µs
-;;;     Execution time std-deviation : 37.443201 ns
-;;;    Execution time lower quantile : 1.088897 µs ( 2.5%)
-;;;    Execution time upper quantile : 1.179156 µs (97.5%)
-;;;                    Overhead used : 9.414056 ns
-```
-
-In most cases, compiling + invoking contextual code will also be faster
-than sci.
 
 ## Status
 

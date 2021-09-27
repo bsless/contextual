@@ -11,8 +11,11 @@
                         ["snapshots" :clojars]]
   :dependencies [[org.clojure/clojure "1.10.1"]]
   :profiles {:dev {:source-paths ["./dev"]
+                   :jvm-opts ["-Djdk.attach.allowAttachSelf"
+                              "-XX:+UnlockDiagnosticVMOptions"
+                              "-XX:+DebugNonSafepoints"]
                    :dependencies [[org.clojure/tools.trace "0.7.10"]
                                   [criterium "0.4.6"]
                                   [com.clojure-goes-fast/clj-async-profiler "0.4.1"]
-                                  [borkdude/sci "0.1.1-alpha.9"]]}}
+                                  [borkdude/sci "0.2.6"]]}}
   :repl-options {:init-ns contextual.core})
